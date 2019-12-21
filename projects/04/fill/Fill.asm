@@ -14,14 +14,14 @@
 // Put your code here.
 
 (KEYBOARD)
-@KBD
-D=M
-@WHITE
-D;JEQ
-@KBD
-D=M
-@BLACK
-D;JNE
+	@KBD
+	D=M
+	@WHITE
+	D;JEQ
+	@KBD
+	D=M
+	@BLACK
+	D;JNE
 @KEYBOARD
 0;JMP
 // loop through the screen and put pixels black
