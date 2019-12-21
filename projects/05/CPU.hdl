@@ -77,11 +77,13 @@ CHIP CPU {
 	ALU (x=registerd, y=muxalu, zx=zx, nx=nx, zy=c3, ny=c4, f=c5, no=c6, out=outalu, out=outM, zr=zr, ng=ng);
 	Not (in=zr, out=notzr);
 	Not (in=ng, out=notng);
+	And (a=notng, b=notzr, out=gt);
+	// acho que dá pra usar só um not ng
 	Or (a=zr, b=notng, out=ge);
 	Or (a=ng, b=zr, out=le);
 	// PC
 	// a - no jump / b - out > 0
-	Mux (a=false, b=notng, sel=j1, out=outab);
+	Mux (a=false, b=gt, sel=j1, out=outab);
 	// c - out == 0 / d - out >= 0
 	Mux (a=zr, b=ge, sel=j1, out=outcd);
 	// e - out < 0 / f - out neq 0
