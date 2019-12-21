@@ -13,23 +13,56 @@
 
 // Put your code here.
 
-
-
+(KEYBOARD)
+@KBD
+D=M
+@WHITE
+D;JEQ
+@KBD
+D=M
+@BLACK
+D;JNE
+@KEYBOARD
+0;JMP
 // loop through the screen and put pixels black
+(BLACK)
 @i
 M=0
-
-(LOOP)
+(LOOPB) // parte que enche a tela
 	@i
 	D=M
 	@SCREEN
 	A=A+D
 	M=-1
 	@i
-	M=M+1
-	
-@LOOP
+	M=M+1 
+	D=M
+	@8192 // checa se já encheu a tela
+	D=D-A
+	@KEYBOARD	//	@END 
+	D;JEQ
+@LOOPB
 0;JMP
+// loop through the screen and put pixels white
+(WHITE)
+@i
+M=0
+(LOOPW)
+	@i
+	D=M
+	@SCREEN
+	A=A+D
+	M=0
+	@i
+	M=M+1
+	D=M
+	@8192
+	D=D-A
+	@KEYBOARD // AJEITA
+	D;JEQ
+@LOOPW
+0;JMP
+
 (END)
 @END
 0;JMP
