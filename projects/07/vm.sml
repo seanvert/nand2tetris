@@ -2,32 +2,31 @@ exception Error
 exception segmentError
 exception logicalError
 exception stackopError
-exception TODO
+exception invalidPointerValue
+
+datatype segment = Argument
+				 | Local
+				 | Static
+				 | Constant
+				 | This
+				 | That
+				 | Pointer
+				 | Temp
 
 
-datatype segment = Argument 
-				 | Local 
-				 | Static 
-				 | Constant 
-				 | This 
-				 | That 
-				 | Pointer 
-				 | Temp 
+datatype arithmlogi = Add
+					| Sub
+					| Neg
+					| Eq
+					| Gt
+					| Lt
+					| And
+					| Or
+					| Not
 
 
-datatype arithmlogi = Add 
-					| Sub 
-					| Neg 
-					| Eq 
-					| Gt 
-					| Lt 
-					| And 
-					| Or 
-					| Not 
-
-
-datatype stackop = Push 
-				 | Pop 
+datatype stackop = Push
+				 | Pop
 
 
 datatype index = Index of int
@@ -48,15 +47,12 @@ fun removeComments (s : string) =
 fun getTokens s =
 	case s of
 		NONE => []
-	  | SOME s  => String.tokens (fn x => x = #" ") s 
+	  | SOME s  => String.tokens (fn x => x = #" ") s
 
 
 val remCommGetTokens = getTokens o removeComments
-								
+
 fun logicalIdentifier s =
-	let
-		(* val _ = print s *)
-	in
 	case s of
 		"add\r\n" => Add
 	  | "sub\r\n" => Sub
@@ -68,7 +64,7 @@ fun logicalIdentifier s =
 	  | "or\r\n" => Or
 	  | "not\r\n" => Not
 	  | _ => raise logicalError
-	end
+
 
 
 fun segmentIdentifier s =
@@ -104,7 +100,7 @@ fun operation (p : string list) =
 
 val getOperationsFromTokens = operation
 
-(* TODO  *)
+
 fun writePush seg (Index i)  =
 	let
 		val n = Int.toString i
@@ -150,7 +146,8 @@ fun writePush seg (Index i)  =
 	  | That => aux "THAT" n
 	  | Pointer => (case i of
 					   0 => auxPointer "THIS"
-					 | 1 => auxPointer "THAT") 
+					 | 1 => auxPointer "THAT"
+					 | _ => raise invalidPointerValue)
 	  | Temp => auxStaticTemp i 5
 	end
 
@@ -158,8 +155,6 @@ fun writePush seg (Index i)  =
 fun writePop seg (Index i) =
 	let
 		val n = Int.toString i
-		(* arrumar isso  *)
-		(* esse d register pode estar com qualquer coisa *)
 		fun aux seg index = "@" ^ seg ^ "\n\
 		\D=M\n\
 		\@" ^ index ^ "\n\
@@ -194,13 +189,12 @@ fun writePop seg (Index i) =
 	  | That => aux "THAT" n
 	  | Pointer => (case i of
 					   0 => auxPointer "THIS"
-					 | 1 => auxPointer "THAT")
+					 | 1 => auxPointer "THAT"
+					 | _ => raise invalidPointerValue)
 	  | Temp => auxStaticTemp i 5
 	end
-		
 
-											  
-(* TODO				   *)
+
 fun writeStackMemOp s =
 	case s of
 		(Push, seg, ind) => writePush seg ind
@@ -214,7 +208,6 @@ fun writeLogArith operation n =
 		\A=A-1\n\
 		\M="^ s ^"\n"
 
-		(* consertar o nome e arrumar  *)
 		fun auxD s = "@SP\n\
 		\AM=M-1\n\
 		\D=M\n\
@@ -264,7 +257,7 @@ fun writeLogArith operation n =
 	  | Neg => auxU "-M"
 	end
 
-(* todo 		 *)
+
 fun codeWriter line n =
 	case line of
 		Operation f => writeLogArith f n
@@ -274,14 +267,6 @@ fun codeWriter line n =
 val getOperation = operation o remCommGetTokens
 
 fun getLineWriteCode s n = codeWriter (getOperation s) n
-								   
-fun f s n =
-	let
-		val x = getLineWriteCode s n
-	in
-		x
-	end
-		
 
 
 fun readfile (input, output) =
@@ -295,7 +280,7 @@ fun readfile (input, output) =
 			in
 			case readline of
 				NONE => (TextIO.closeIn instream; TextIO.closeOut outstream)
-			  | SOME s => (TextIO.output(outstream, (f s n)); aux (TextIO.inputLine instream) (n + 1))
+			  | SOME s => (TextIO.output(outstream, (getLineWriteCode s n)); aux (TextIO.inputLine instream) (n + 1))
 			end
 	in
 		aux readline 0
