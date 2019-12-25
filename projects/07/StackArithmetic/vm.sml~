@@ -5,8 +5,6 @@ exception stackopError
 exception TODO
 
 
-
-
 datatype segment = Argument 
 				 | Local 
 				 | Static 
@@ -37,29 +35,34 @@ datatype index = Index of int
 
 datatype line = Operation of arithmlogi
 			  | Memory of stackop * segment * index
+			  | Empty
 
 
 fun removeComments (s : string) =
-	if substring (s, 0, 2) = "//" then NONE else SOME s
+	case s of
+		"\r\n" => NONE
+	  | "\n" => NONE
+	  | _ => if substring (s, 0, 2) = "//" then NONE else SOME s
 
 
 fun getTokens s =
 	case s of
 		NONE => []
-	  | SOME s  => String.tokens (fn x => x = #" ") s
+	  | SOME s  => String.tokens (fn x => x = #" ") s 
+
 
 val remCommGetTokens = getTokens o removeComments
 								
 fun logicalIdentifier s =
 	case s of
-		"add" => Add
-	  | "sub" => Sub
-	  | "neg" => Neg
-	  | "eq" => Eq
-	  | "lt" => Lt
-	  | "and" => And
-	  | "or" => Or
-	  | "not" => Not
+		"add\r\n" => Add
+	  | "sub\r\n" => Sub
+	  | "neg\r\n" => Neg
+	  | "eq\r\n" => Eq
+	  | "lt\r\n" => Lt
+	  | "and\r\n" => And
+	  | "or\r\n" => Or
+	  | "not\r\n" => Not
 	  | _ => raise logicalError
 
 
@@ -92,9 +95,9 @@ fun operation (p : string list) =
 	case p of
 		(p1::[]) => Operation (logicalIdentifier p1)
 	  | (p1::p2::p3::[]) => Memory (memOperations (p1, p2, p3))
-	  | _ => raise Error
+	  | _ => Empty
 
-val getOperationsFromTokens = operation o remCommGetTokens
+val getOperationsFromTokens = operation
 
 (* TODO  *)
 fun writePush seg (Index i) stackAddress =
@@ -115,8 +118,8 @@ fun writePop seg (Index i) stackAddress = seg
 (* TODO				   *)
 fun writeStackMemOp s =
 	case s of
-		Memory (Push, seg, ind) => writePush seg ind 0
-	  | Memory (Pop, seg, Index i) => raise TODO
+		(Push, seg, ind) => writePush seg ind 0
+	  | (Pop, seg, Index i) => raise TODO
 
  (* n é o número de linhas no código										  *)
 fun writeLogArith operation stackAddress n =
@@ -128,8 +131,7 @@ fun writeLogArith operation stackAddress n =
 
 		(* consertar o nome e arrumar  *)
 		fun auxD s = "@SP\n\
-		\A=M\n\
-		\A=A-1\n\
+		\AM=M-1\n\
 		\D=M\n\
 		\A=A-1\n" ^ s ^ "\n\
 		\A=A+1\n"
@@ -174,7 +176,6 @@ fun writeLogArith operation stackAddress n =
 	  | Lt => (auxC "JGT" "JLE" 0, stackAddress - 1)
 	  | Not => (auxU "!M", stackAddress)
 	  | Neg => (auxU "-M", stackAddress)
-	  | _ => raise TODO
 	end
 
 
@@ -183,13 +184,18 @@ fun codeWriter line =
 	case line of
 		Operation f => writeLogArith f 0 0
 	  | Memory s => writeStackMemOp s
+	  | Empty => ("\n", 0)
 
-val getLineWriteCode = codeWriter o getOperationsFromTokens
+val getLineWriteCode = codeWriter o operation o remCommGetTokens
 
 fun f s =
-	case getLineWriteCode s of
-		(x,y) => x
-	  | _ => raise TODO
+	let
+		val (x, y) = getLineWriteCode s
+	in
+		x
+	end
+		
+
 
 fun readfile (input, output) =
 	let
@@ -204,4 +210,8 @@ fun readfile (input, output) =
 		aux readline
 	end
 
-val _ = readfile ("BasicTest.vm", "basictest.teste")
+val args = CommandLine.arguments()
+val filename = hd (String.tokens (fn x => x = #".") (hd args))
+
+val _ = readfile ((hd args), filename ^ ".asm")
+val _ = OS.Process.exit(OS.Process.success)

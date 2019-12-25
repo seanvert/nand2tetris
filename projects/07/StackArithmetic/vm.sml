@@ -55,13 +55,14 @@ val remCommGetTokens = getTokens o removeComments
 								
 fun logicalIdentifier s =
 	let
-		val _ = print s
+		(* val _ = print s *)
 	in
 	case s of
 		"add\r\n" => Add
 	  | "sub\r\n" => Sub
 	  | "neg\r\n" => Neg
 	  | "eq\r\n" => Eq
+	  | "gt\r\n" => Gt
 	  | "lt\r\n" => Lt
 	  | "and\r\n" => And
 	  | "or\r\n" => Or
@@ -104,29 +105,72 @@ fun operation (p : string list) =
 val getOperationsFromTokens = operation
 
 (* TODO  *)
-fun writePush seg (Index i) stackAddress =
+fun writePush seg (Index i)  =
+	let
+		val n = Int.toString i
+		fun aux seg i = "@" ^ seg ^ "\n\
+		\D=M\n\
+		\@" ^ i ^ "\n\
+		\A=D+A\n\
+		\D=M\n\
+		\@SP\n\
+		\A=M-1\n\
+		\M=D\n"
+	in
 	case seg of
-		Constant => ("@" ^ Int.toString i ^ "\n\
+		Constant => "@" ^ n ^ "\n\
 		\D=A\n\
 		\@SP\n\
 		\A=M\n\
 		\M=D\n\
 		\@SP\n\
-		\AM=M+1\n", stackAddress + 1)
-	  | _ => raise TODO
+		\AM=M+1\n"
+	  | Argument => aux "ARG" n
+	  | Local => aux "LCL" n
+	  | Static => raise TODO
+	  | This => aux "THIS" n
+	  | That => aux "THAT" n
+	  | Pointer => raise TODO
+	  | Temp => raise TODO
+	end
 
 
-fun writePop seg (Index i) stackAddress = seg
+fun writePop seg (Index i) =
+	let
+		val n = Int.toString i
+		fun aux seg i stackAddress = "@" ^ seg ^ "\n\
+		\D=M\n\
+		\@" ^ n ^ "\n\
+		\D=D+A\n\
+		\@" ^ seg ^ n ^ "\n\
+		\M=D\n\
+		\@SP\n\
+		\AM=M-1\n\
+		\D=M\n\
+		\@" ^ seg ^ n ^ "\n\
+		\M=D\n"
+	in
+	case seg of
+		Argument => aux "ARG" n 0
+	  | Local => aux "LCL" n 0
+	  | Static => raise TODO
+	  | Constant => raise Error
+	  | This => aux "THIS" n 0
+	  | That => aux "THAT" n 0
+	  | Pointer => raise TODO
+	  | Temp => raise TODO
+	end
+		
 
 											  
 (* TODO				   *)
 fun writeStackMemOp s =
 	case s of
-		(Push, seg, ind) => writePush seg ind 0
-	  | (Pop, seg, Index i) => raise TODO
+		(Push, seg, ind) => writePush seg ind
+	  | (Pop, seg, ind) => writePop seg ind
 
  (* n é o número de linhas no código										  *)
-fun writeLogArith operation stackAddress n =
+fun writeLogArith operation n =
 	let
 		fun auxU s = "@SP\n\
 		\A=M\n\
@@ -168,27 +212,26 @@ fun writeLogArith operation stackAddress n =
 		\M=M+1\n"
 	in
 	case operation of
-		Add => (auxD "M=D+M", stackAddress - 1)
+		Add => auxD "M=D+M"
 	  (* aqui não tenho certeza de como funciona a subtração da vm *)
 	  (* do jeito que está fica o segundo menos o primeiro da pilha *)
-	  | Sub => (auxD "M=M-D", stackAddress - 1)
-	  | And => (auxD "M=M&D", stackAddress - 1)
-	  | Or => (auxD "M=M|D", stackAddress - 1)
+	  | Sub => auxD "M=M-D"
+	  | And => auxD "M=M&D"
+	  | Or => auxD "M=M|D"
 	  (* arruma esse n depois  *)
-	  | Eq => (auxC "JEQ" "JNE" n, stackAddress - 1)
-	  | Gt => (auxC "JLT" "JGE" n, stackAddress - 1)
-	  | Lt => (auxC "JGT" "JLE" n, stackAddress - 1)
-	  | Not => (auxU "!M", stackAddress)
-	  | Neg => (auxU "-M", stackAddress)
+	  | Eq => auxC "JEQ" "JNE" n
+	  | Gt => auxC "JGT" "JLE" n
+	  | Lt => auxC "JLT" "JGE" n
+	  | Not => auxU "!M"
+	  | Neg => auxU "-M"
 	end
-
 
 (* todo 		 *)
 fun codeWriter line n =
 	case line of
-		Operation f => writeLogArith f 0 n
+		Operation f => writeLogArith f n
 	  | Memory s => writeStackMemOp s
-	  | Empty => ("\n", 0)
+	  | Empty => "\n"
 
 val getOperation = operation o remCommGetTokens
 
@@ -196,7 +239,7 @@ fun getLineWriteCode s n = codeWriter (getOperation s) n
 								   
 fun f s n =
 	let
-		val (x, y) = getLineWriteCode s n
+		val x = getLineWriteCode s n
 	in
 		x
 	end
@@ -210,7 +253,7 @@ fun readfile (input, output) =
 		val readline = TextIO.inputLine instream
 		fun aux readline n =
 			let
-				val _ = print Int.toString n
+				(* val _ = print (Int.toString n) *)
 			in
 			case readline of
 				NONE => (TextIO.closeIn instream; TextIO.closeOut outstream)
