@@ -391,7 +391,6 @@ AM=M-1
 D=M
 A=A-1
 M=D+M
-A=A+1
 @112
 D=A
 @SP
@@ -404,7 +403,6 @@ AM=M-1
 D=M
 A=A-1
 M=M-D
-A=A+1
 @SP
 A=M
 A=A-1
@@ -414,7 +412,6 @@ AM=M-1
 D=M
 A=A-1
 M=M&D
-A=A+1
 @82
 D=A
 @SP
@@ -427,7 +424,6 @@ AM=M-1
 D=M
 A=A-1
 M=M|D
-A=A+1
 @SP
 A=M
 A=A-1

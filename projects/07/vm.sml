@@ -108,14 +108,32 @@ val getOperationsFromTokens = operation
 fun writePush seg (Index i)  =
 	let
 		val n = Int.toString i
-		fun aux seg i = "@" ^ seg ^ "\n\
+		fun aux seg index = "@" ^ seg ^ "\n\
 		\D=M\n\
-		\@" ^ i ^ "\n\
+		\@" ^ index ^ "\n\
 		\A=D+A\n\
 		\D=M\n\
 		\@SP\n\
-		\A=M-1\n\
-		\M=D\n"
+		\A=M\n\
+		\M=D\n\
+		\@SP\n\
+		\M=M+1\n"
+
+		fun auxPointer seg = "@" ^ seg ^ "\n\
+		\D=M\n\
+		\@SP\n\
+		\A=M\n\
+		\M=D\n\
+		\@SP\n\
+		\M=M+1\n"
+
+		fun auxStaticTemp n x = "@" ^ Int.toString (n + x) ^ "\n\
+		\D=M\n\
+		\@SP\n\
+		\A=M\n\
+		\M=D\n\
+		\@SP\n\
+		\M=M+1\n"
 	in
 	case seg of
 		Constant => "@" ^ n ^ "\n\
@@ -124,41 +142,60 @@ fun writePush seg (Index i)  =
 		\A=M\n\
 		\M=D\n\
 		\@SP\n\
-		\AM=M+1\n"
+		\M=M+1\n"
 	  | Argument => aux "ARG" n
 	  | Local => aux "LCL" n
-	  | Static => raise TODO
+	  | Static => auxStaticTemp i 16
 	  | This => aux "THIS" n
 	  | That => aux "THAT" n
-	  | Pointer => raise TODO
-	  | Temp => raise TODO
+	  | Pointer => (case i of
+					   0 => auxPointer "THIS"
+					 | 1 => auxPointer "THAT") 
+	  | Temp => auxStaticTemp i 5
 	end
 
 
 fun writePop seg (Index i) =
 	let
 		val n = Int.toString i
-		fun aux seg i stackAddress = "@" ^ seg ^ "\n\
+		(* arrumar isso  *)
+		(* esse d register pode estar com qualquer coisa *)
+		fun aux seg index = "@" ^ seg ^ "\n\
 		\D=M\n\
-		\@" ^ n ^ "\n\
+		\@" ^ index ^ "\n\
 		\D=D+A\n\
-		\@" ^ seg ^ n ^ "\n\
+		\@" ^ seg ^ index ^ "\n\
 		\M=D\n\
 		\@SP\n\
 		\AM=M-1\n\
 		\D=M\n\
-		\@" ^ seg ^ n ^ "\n\
+		\@" ^ seg ^ index ^ "\n\
+		\A=M\n\
+		\M=D\n"
+
+		fun auxPointer seg = "@SP\n\
+		\AM=M-1\n\
+		\D=M\n\
+		\@" ^ seg ^ "\n\
+		\M=D\n"
+
+		fun auxStaticTemp n x = "@SP\n\
+		\AM=M-1\n\
+		\D=M\n\
+		\@" ^ Int.toString (n + x) ^ "\n\
 		\M=D\n"
 	in
 	case seg of
-		Argument => aux "ARG" n 0
-	  | Local => aux "LCL" n 0
-	  | Static => raise TODO
+		Argument => aux "ARG" n
+	  | Local => aux "LCL" n
+	  | Static => auxStaticTemp i 16
 	  | Constant => raise Error
-	  | This => aux "THIS" n 0
-	  | That => aux "THAT" n 0
-	  | Pointer => raise TODO
-	  | Temp => raise TODO
+	  | This => aux "THIS" n
+	  | That => aux "THAT" n
+	  | Pointer => (case i of
+					   0 => auxPointer "THIS"
+					 | 1 => auxPointer "THAT")
+	  | Temp => auxStaticTemp i 5
 	end
 		
 
@@ -167,7 +204,7 @@ fun writePop seg (Index i) =
 fun writeStackMemOp s =
 	case s of
 		(Push, seg, ind) => writePush seg ind
-	  | (Pop, seg, ind) => raise TODO
+	  | (Pop, seg, ind) => writePop seg ind
 
  (* n é o número de linhas no código										  *)
 fun writeLogArith operation n =
@@ -181,10 +218,13 @@ fun writeLogArith operation n =
 		fun auxD s = "@SP\n\
 		\AM=M-1\n\
 		\D=M\n\
-		\A=A-1\n" ^ s ^ "\n\
-		\A=A+1\n"
+		\A=A-1\n" ^ s ^ "\n"
 
-		fun auxC j1 j2 n = "@SP\n\
+		fun auxC j1 j2 n =
+			let
+				val k = Int.toString n
+			in
+		"@SP\n\
 		\A=M\n\
 		\A=A-1\n\
 		\D=M\n\
@@ -193,32 +233,30 @@ fun writeLogArith operation n =
 		\@SP\n\
 		\M=M-1\n\
 		\M=M-1\n\
-		\@TESTE" ^ Int.toString n ^ "A\n\
+		\@TESTE" ^ k ^ "A\n\
 		\D;" ^ j1 ^ "\n\
-		\@TESTE" ^ Int.toString n ^ "B\n\
+		\@TESTE" ^ k ^ "B\n\
 		\D;" ^ j2 ^ "\n\
-		\(TESTE" ^ Int.toString n ^ "A)\n\
+		\(TESTE" ^ k ^ "A)\n\
 		\@SP\n\
 		\A=M\n\
 		\M=-1\n\
-		\@END" ^ Int.toString n ^ "\n\
+		\@END" ^ k ^ "\n\
 		\0;JMP\n\
-		\(TESTE" ^ Int.toString n ^ "B)\n\
+		\(TESTE" ^ k ^ "B)\n\
 		\@SP\n\
 		\A=M\n\
 		\M=0\n\
-		\(END" ^ Int.toString n ^ ")\n\
+		\(END" ^ k ^ ")\n\
 		\@SP\n\
 		\M=M+1\n"
+			end
 	in
 	case operation of
 		Add => auxD "M=D+M"
-	  (* aqui não tenho certeza de como funciona a subtração da vm *)
-	  (* do jeito que está fica o segundo menos o primeiro da pilha *)
 	  | Sub => auxD "M=M-D"
 	  | And => auxD "M=M&D"
 	  | Or => auxD "M=M|D"
-	  (* arruma esse n depois  *)
 	  | Eq => auxC "JEQ" "JNE" n
 	  | Gt => auxC "JGT" "JLE" n
 	  | Lt => auxC "JLT" "JGE" n
@@ -231,7 +269,7 @@ fun codeWriter line n =
 	case line of
 		Operation f => writeLogArith f n
 	  | Memory s => writeStackMemOp s
-	  | Empty => r
+	  | Empty => "\n"
 
 val getOperation = operation o remCommGetTokens
 
