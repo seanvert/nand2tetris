@@ -3,7 +3,9 @@ exception segmentError
 exception logicalError
 exception stackopError
 exception invalidPointerValue
-
+val args = CommandLine.arguments()
+val filename = hd (String.tokens (fn x => x = #".") (hd args))
+			  
 datatype segment = Argument
 				 | Local
 				 | Static
@@ -230,21 +232,21 @@ fun writeLogArith operation n =
 		\@SP\n\
 		\M=M-1\n\
 		\M=M-1\n\
-		\@TESTE" ^ k ^ "A\n\
+		\@" ^ filename ^ "." ^ k ^ "A\n\
 		\D;" ^ j1 ^ "\n\
-		\@TESTE" ^ k ^ "B\n\
+		\@" ^ filename ^ "." ^ k ^ "B\n\
 		\D;" ^ j2 ^ "\n\
-		\(TESTE" ^ k ^ "A)\n\
+		\(" ^ filename ^ "." ^ k ^ "A)\n\
 		\@SP\n\
 		\A=M\n\
 		\M=-1\n\
-		\@END" ^ k ^ "\n\
+		\@" ^ filename ^ "." ^ k ^ "\n\
 		\0;JMP\n\
-		\(TESTE" ^ k ^ "B)\n\
+		\(" ^ filename ^ "." ^ k ^ "B)\n\
 		\@SP\n\
 		\A=M\n\
 		\M=0\n\
-		\(END" ^ k ^ ")\n\
+		\(" ^ filename ^ "." ^ k ^ ")\n\
 		\@SP\n\
 		\M=M+1\n"
 			end
@@ -290,8 +292,6 @@ fun readfile (input, output) =
 		aux readline 0
 	end
 
-val args = CommandLine.arguments()
-val filename = hd (String.tokens (fn x => x = #".") (hd args))
 
 val _ = readfile ((hd args), filename ^ ".asm")
 val _ = OS.Process.exit(OS.Process.success)
