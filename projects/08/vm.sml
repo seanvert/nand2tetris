@@ -41,9 +41,10 @@ datatype line = Operation of arithmlogi
 			  | Labelop of labelFlow * labelString
 			  | Empty
 
-(* val args = CommandLine.arguments() *)
-(* val filename = hd (String.tokens (fn x => x = #".") (hd args)) *)
-val filename = "asd"
+val args = CommandLine.arguments()
+val filename = hd (String.tokens (fn x => x = #".") (hd args))
+(* placeholder só pra teste  *)
+(* val filename = "asd" *)
 
 fun removeComments (s : string) =
 	case s of
@@ -51,12 +52,10 @@ fun removeComments (s : string) =
 	  | "\n" => NONE
 	  | _ => if substring (s, 0, 2) = "//" then NONE else SOME s
 
-
 fun getTokens s =
 	case s of
 		NONE => []
 	  | SOME s  => String.tokens (fn x => x = #" ") s
-
 
 val remCommGetTokens = getTokens o removeComments
 
@@ -72,8 +71,6 @@ fun logicalIdentifier s =
 	  | "or\r\n" => Or
 	  | "not\r\n" => Not
 	  | _ => raise logicalError
-
-
 
 fun segmentIdentifier s =
 	case s of
@@ -100,10 +97,14 @@ fun memOperations (q, w, e) =
 	end
 
 fun readLabelFlow p1 p2 =
+	let
+
+	in
 	case p1 of
-		"label" => (Label, labelString p2)
-	  | "goto" => (Goto, labelString p2)
-	  | "ifgoto" => (Ifgoto, labelString p2)
+		"label" => (Label, LabelName p2)
+	  | "goto" => (Goto, LabelName p2)
+	  | "if-goto" => (Ifgoto, LabelName p2)
+	end
 
 fun operation (p : string list) =
 	case p of
@@ -113,6 +114,21 @@ fun operation (p : string list) =
 	  | _ => Empty
 
 val getOperationsFromTokens = operation
+
+fun writeLabelops (label, LabelName s) =
+	let
+		val _ = print s
+	in
+	case label of
+		Label => "(" ^ s ^ ")"
+	  | Goto => "@" ^ s ^ "\n\
+	  \0;JMP\n"
+	  | Ifgoto => "@SP\n\
+	  \AM=M-1\n\
+	  \D=M\n\
+	  \@" ^ s ^ "\n\
+	  \D;JEQ\n"
+	end
 
 fun writePush seg (Index i)  =
 	let
@@ -164,7 +180,6 @@ fun writePush seg (Index i)  =
 	  | Temp => auxStaticTemp i 5
 	end
 
-
 fun writePop seg (Index i) =
 	let
 		val n = Int.toString i
@@ -207,13 +222,12 @@ fun writePop seg (Index i) =
 	  | Temp => auxStaticTemp i 5
 	end
 
-
 fun writeStackMemOp s =
 	case s of
 		(Push, seg, ind) => writePush seg ind
 	  | (Pop, seg, ind) => writePop seg ind
 
- (* n é o número de linhas no código										  *)
+(* n é o número de linhas no código										  *)
 fun writeLogArith operation n =
 	let
 		fun auxU s = "@SP\n\
@@ -270,11 +284,11 @@ fun writeLogArith operation n =
 	  | Neg => auxU "-M"
 	end
 
-
 fun codeWriter line n =
 	case line of
 		Operation f => writeLogArith f n
 	  | Memory s => writeStackMemOp s
+	  | Labelop lop => writeLabelops lop
 	  | Empty => "\n"
 
 val getOperation = operation o remCommGetTokens
@@ -298,6 +312,5 @@ fun readfile (input, output) =
 		aux readline 0
 	end
 
-
-(* val _ = readfile ((hd args), filename ^ ".asm") *)
-(* val _ = OS.Process.exit(OS.Process.success) *)
+val _ = readfile ((hd args), filename ^ ".asm")
+val _ = OS.Process.exit(OS.Process.success)

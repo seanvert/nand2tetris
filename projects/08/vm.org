@@ -76,7 +76,7 @@ datatype line
 val args = CommandLine.arguments()
 val filename = hd (String.tokens (fn x => x = #".") (hd args))
 (* placeholder só pra teste  *)
-val filename = "asd"
+(* val filename = "asd" *)
 #+end_src
 
 * read functions string -> string list
@@ -124,6 +124,9 @@ fun logicalIdentifier s =
 
 #+end_src
 
+#+RESULTS:
+: val logicalIdentifier = fn : string -> arithmlogi
+
 *** ☛ TODO memory identifier
 colocar um erro e uma função auxiliar para mexer com esses
 Int.fromString no programa inteiro. Acho que uma função com tipos de
@@ -158,16 +161,33 @@ fun memOperations (q, w, e) =
 
 #+end_src
 
+#+RESULTS:
+: stdIn:91.7-91.32 Warning: binding not exhaustive
+:           SOME i = ...
+: val segmentIdentifier = fn : string -> segment
+: val memOperations = fn : string * string * string -> stackop * segment * index
+
 *** label flow identifier
 
 #+begin_src sml
 fun readLabelFlow p1 p2 =
-	case p1 of
-		"label" => (Label, labelString p2)
-	  | "goto" => (Goto, labelString p2)
-	  | "ifgoto" => (Ifgoto, labelString p2)
+	let
 
+	in
+	case p1 of
+		"label" => (Label, LabelName p2)
+	  | "goto" => (Goto, LabelName p2)
+	  | "if-goto" => (Ifgoto, LabelName p2)
+	end
 #+end_src
+
+#+RESULTS:
+: stdIn:370.2-373.41 Warning: match nonexhaustive
+:           "label" => ...
+:           "goto" => ...
+:           "if-goto" => ...
+:   
+: val readLabelFlow = fn : string -> string -> labelFlow * labelString
 
 ** ☛ TODO main function
 falta dar um jeito nisso e melhorar a maneira que ele escolhe as
@@ -183,18 +203,38 @@ fun operation (p : string list) =
 val getOperationsFromTokens = operation
 #+end_src
 
+#+RESULTS:
+: val operation = fn : string list -> line
+: val getOperationsFromTokens = fn : string list -> line
+
 * write : line -> string
 
-** ⚑ ESPERANDO write label operations
+** ⚑ ESPERANDO init 
+
+** ☛ TODO write label operations
+esses nomes dos tipos das labels ficaram bem confusos, depois acho que
+seria bom trocar.
 
 #+begin_src sml
-fun writeLabelops line =
-	case line of
-		Labelop (Label, labelString s) => 
-	  | Labelop (Goto, labelString s) =>
-	  | Labelop (Ifgoto, labelString s) => 
+fun writeLabelops (label, LabelName s) =
+	let
+		val _ = print s
+	in
+	case label of
+		Label => "(" ^ s ^ ")"
+	  | Goto => "@" ^ s ^ "\n\
+	  \0;JMP\n"
+	  | Ifgoto => "@SP\n\
+	  \AM=M-1\n\
+	  \D=M\n\
+	  \@" ^ s ^ "\n\
+	  \D;JEQ\n"
+	end
 		
 #+end_src
+
+#+RESULTS:
+: val writeLabelops = fn : labelFlow * labelString -> string
 
 ** write mem operations
 
@@ -252,6 +292,9 @@ fun writePush seg (Index i)  =
 	end
 #+end_src
 
+#+RESULTS:
+: val writePush = fn : segment -> index -> string
+
 *** write pop
 
 #+begin_src sml
@@ -298,6 +341,9 @@ fun writePop seg (Index i) =
 	end
 #+end_src
 
+#+RESULTS:
+: val writePop = fn : segment -> index -> string
+
 *** main function
 
 #+begin_src sml
@@ -306,6 +352,9 @@ fun writeStackMemOp s =
 		(Push, seg, ind) => writePush seg ind
 	  | (Pop, seg, ind) => writePop seg ind
 #+end_src
+
+#+RESULTS:
+: val writeStackMemOp = fn : stackop * segment * index -> string
 
 ** write arithmetic and logical operations
 
@@ -369,6 +418,9 @@ fun writeLogArith operation n =
 
 #+end_src
 
+#+RESULTS:
+: val writeLogArith = fn : arithmlogi -> int -> string
+
 ** main function
 
 #+begin_src sml
@@ -376,6 +428,7 @@ fun codeWriter line n =
 	case line of
 		Operation f => writeLogArith f n
 	  | Memory s => writeStackMemOp s
+	  | Labelop lop => writeLabelops lop
 	  | Empty => "\n"
 
 val getOperation = operation o remCommGetTokens
@@ -383,6 +436,11 @@ val getOperation = operation o remCommGetTokens
 fun getLineWriteCode s n = codeWriter (getOperation s) n
 
 #+end_src
+
+#+RESULTS:
+: val codeWriter = fn : line -> int -> string
+: val getOperation = fn : string -> line
+: val getLineWriteCode = fn : string -> int -> string
 
 * ☛ TODO read stream, write stream
 falta mexer em algumas coisas, passar o número de variáveis criadas
