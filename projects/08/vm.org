@@ -124,7 +124,12 @@ fun logicalIdentifier s =
 
 #+end_src
 
-*** memory identifier
+*** ☛ TODO memory identifier
+colocar um erro e uma função auxiliar para mexer com esses
+Int.fromString no programa inteiro. Acho que uma função com tipos de
+erro diferente dependendo de onde foi passada a string seria uma boa.
+fn : int OPTION -> string -> string
+algo nessas linhas.
 
 #+begin_src sml
 fun segmentIdentifier s =
@@ -164,8 +169,9 @@ fun readLabelFlow p1 p2 =
 
 #+end_src
 
-** main function
-
+** ☛ TODO main function
+falta dar um jeito nisso e melhorar a maneira que ele escolhe as
+operações. Por enquanto ele vai funcionar bem.
 #+begin_src sml
 fun operation (p : string list) =
 	case p of
