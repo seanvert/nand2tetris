@@ -1,9 +1,19 @@
+#+PROPERTY: header-args:sml :results verbatim :session smlnj :tangle vm.sml
+* exceptions
+
+#+begin_src sml
 exception Error
 exception segmentError
 exception logicalError
 exception stackopError
 exception invalidPointerValue
+#+end_src
 
+#+RESULTS:
+
+* datatypes: segment, arithmlogi, stackop, labelFlow, index, labelString, line
+
+#+begin_src sml
 datatype segment = Argument
 				 | Local
 				 | Static
@@ -41,25 +51,64 @@ datatype line = Operation of arithmlogi
 			  | Labelop of labelFlow * labelString
 			  | Empty
 
-(* val args = CommandLine.arguments() *)
-(* val filename = hd (String.tokens (fn x => x = #".") (hd args)) *)
-val filename = "asd"
 
+#+end_src
+
+#+RESULTS:
+#+begin_example
+datatype segment
+  = Argument | Constant | Local | Pointer | Static | Temp | That | This
+datatype arithmlogi = Add | And | Eq | Gt | Lt | Neg | Not | Or | Sub
+datatype stackop = Pop | Push
+datatype labelFlow = Goto | Ifgoto | Label
+datatype index = Index of int
+datatype labelString = LabelName of string
+datatype line
+  = Empty
+  | Labelop of labelFlow * labelString
+  | Memory of stackop * segment * index
+  | Operation of arithmlogi
+#+end_example
+
+* arguments
+
+#+begin_src sml
+val args = CommandLine.arguments()
+val filename = hd (String.tokens (fn x => x = #".") (hd args))
+(* placeholder só pra teste  *)
+val filename = "asd"
+#+end_src
+
+* read functions string -> string list
+
+#+begin_src sml
 fun removeComments (s : string) =
 	case s of
 		"\r\n" => NONE
 	  | "\n" => NONE
 	  | _ => if substring (s, 0, 2) = "//" then NONE else SOME s
 
-
 fun getTokens s =
 	case s of
 		NONE => []
 	  | SOME s  => String.tokens (fn x => x = #" ") s
 
-
 val remCommGetTokens = getTokens o removeComments
 
+#+end_src
+
+#+RESULTS:
+: val removeComments = fn : string -> string option
+: val getTokens = fn : string option -> string list
+: val remCommGetTokens = fn : string -> string list
+
+* functions string list -> line
+
+** auxiliary functions
+
+*** logical/arithmetic identifier
+
+#+begin_src sml
 fun logicalIdentifier s =
 	case s of
 		"add\r\n" => Add
@@ -73,8 +122,11 @@ fun logicalIdentifier s =
 	  | "not\r\n" => Not
 	  | _ => raise logicalError
 
+#+end_src
 
+*** memory identifier
 
+#+begin_src sml
 fun segmentIdentifier s =
 	case s of
 		"argument" => Argument (* RAM [2] POINTER *)
@@ -99,12 +151,22 @@ fun memOperations (q, w, e) =
 		  | _ => raise stackopError
 	end
 
+#+end_src
+
+*** label flow identifier
+
+#+begin_src sml
 fun readLabelFlow p1 p2 =
 	case p1 of
 		"label" => (Label, labelString p2)
 	  | "goto" => (Goto, labelString p2)
 	  | "ifgoto" => (Ifgoto, labelString p2)
 
+#+end_src
+
+** main function
+
+#+begin_src sml
 fun operation (p : string list) =
 	case p of
 		(p1::[]) => Operation (logicalIdentifier p1)
@@ -113,7 +175,15 @@ fun operation (p : string list) =
 	  | _ => Empty
 
 val getOperationsFromTokens = operation
+#+end_src
 
+* write : line -> string
+
+** write mem operations
+
+*** write push
+
+#+begin_src sml
 fun writePush seg (Index i)  =
 	let
 		val n = Int.toString i
@@ -163,8 +233,11 @@ fun writePush seg (Index i)  =
 					 | _ => raise invalidPointerValue)
 	  | Temp => auxStaticTemp i 5
 	end
+#+end_src
 
+*** write pop
 
+#+begin_src sml
 fun writePop seg (Index i) =
 	let
 		val n = Int.toString i
@@ -206,13 +279,20 @@ fun writePop seg (Index i) =
 					 | _ => raise invalidPointerValue)
 	  | Temp => auxStaticTemp i 5
 	end
+#+end_src
 
+*** main function
 
+#+begin_src sml
 fun writeStackMemOp s =
 	case s of
 		(Push, seg, ind) => writePush seg ind
 	  | (Pop, seg, ind) => writePop seg ind
+#+end_src
 
+** write arithmetic and logical operations
+
+#+begin_src sml
  (* n é o número de linhas no código										  *)
 fun writeLogArith operation n =
 	let
@@ -270,7 +350,11 @@ fun writeLogArith operation n =
 	  | Neg => auxU "-M"
 	end
 
+#+end_src
 
+** main function
+
+#+begin_src sml
 fun codeWriter line n =
 	case line of
 		Operation f => writeLogArith f n
@@ -281,6 +365,13 @@ val getOperation = operation o remCommGetTokens
 
 fun getLineWriteCode s n = codeWriter (getOperation s) n
 
+#+end_src
+
+* ☛ TODO read stream, write stream
+falta mexer em algumas coisas, passar o número de variáveis criadas
+até então ao invés do número de linhas
+
+#+begin_src sml
 fun readfile (input, output) =
 	let
 		val instream = TextIO.openIn input
@@ -298,6 +389,12 @@ fun readfile (input, output) =
 		aux readline 0
 	end
 
+#+end_src
 
-(* val _ = readfile ((hd args), filename ^ ".asm") *)
-(* val _ = OS.Process.exit(OS.Process.success) *)
+* exit success
+
+#+begin_src sml
+val _ = readfile ((hd args), filename ^ ".asm")
+val _ = OS.Process.exit(OS.Process.success)
+#+end_src
+
