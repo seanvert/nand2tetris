@@ -185,6 +185,17 @@ val getOperationsFromTokens = operation
 
 * write : line -> string
 
+** ⚑ ESPERANDO write label operations
+
+#+begin_src sml
+fun writeLabelops line =
+	case line of
+		Labelop (Label, labelString s) => 
+	  | Labelop (Goto, labelString s) =>
+	  | Labelop (Ifgoto, labelString s) => 
+		
+#+end_src
+
 ** write mem operations
 
 *** write push
