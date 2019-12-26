@@ -28,12 +28,16 @@ datatype arithmlogi = Add
 datatype stackop = Push
 				 | Pop
 
+datatype label = Label of string
+			   | Goto of string
+			   | Ifgoto of string
 
 datatype index = Index of int
 
 
 datatype line = Operation of arithmlogi
 			  | Memory of stackop * segment * index
+			  | Labelop of label
 			  | Empty
 
 
