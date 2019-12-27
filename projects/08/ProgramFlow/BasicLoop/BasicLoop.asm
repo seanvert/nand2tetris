@@ -7,9 +7,19 @@
 
 
 
-
-(LOOP_START
-)
+@LCL
+D=M
+@0
+D=D+A
+@LCL0
+M=D
+@SP
+AM=M-1
+D=M
+@LCL0
+A=M
+M=D
+(LOOP_START)
 @LCL
 D=M
 @0
@@ -25,7 +35,18 @@ AM=M-1
 D=M
 A=A-1
 M=D+M
-
+@LCL
+D=M
+@0
+D=D+A
+@LCL0
+M=D
+@SP
+AM=M-1
+D=M
+@LCL0
+A=M
+M=D
 @ARG
 D=M
 @0
@@ -48,7 +69,18 @@ AM=M-1
 D=M
 A=A-1
 M=M-D
-
+@ARG
+D=M
+@0
+D=D+A
+@ARG0
+M=D
+@SP
+AM=M-1
+D=M
+@ARG0
+A=M
+M=D
 @ARG
 D=M
 @0
@@ -59,7 +91,11 @@ A=M
 M=D
 @SP
 M=M+1
-
+@SP
+AM=M-1
+D=M
+@LOOP_START
+D;JEQ
 @LCL
 D=M
 @0

@@ -1,0 +1,67 @@
+use "vm.sml";
+val test0 = remCommGetTokens "// This file is part of www.nand2tetris.org"
+val test1 = remCommGetTokens "// and the book \"The Elements of Computing Systems\""
+val test2 = remCommGetTokens "// by Nisan and Schocken, MIT Press."
+val test3 = remCommGetTokens "// File name: projects/08/ProgramFlow/BasicLoop/BasicLoop.vm"
+val test4 = remCommGetTokens "// Computes the sum 1 + 2 + ... + argument[0] and pushes the "
+val test5 = remCommGetTokens "// result onto the stack. Argument[0] is initialized by the test "
+val test6 = remCommGetTokens "// script before this code starts running."
+val test7 = remCommGetTokens "push constant 0    "
+val test8 = remCommGetTokens "pop local 0         // initializes sum = 0"
+val test9 = remCommGetTokens "label LOOP_START"
+(* val SOME tasd = String.fromString "push argument 0    " *)
+val test10 = remCommGetTokens "push argument 0    "
+val test11 = remCommGetTokens "push local 0"
+val test12 = remCommGetTokens "add"
+val test13 = remCommGetTokens "pop local 0	        // sum = sum + counter"
+val test14 = remCommGetTokens "push argument 0"
+val test15 = remCommGetTokens "push constant 1"
+val test16 = remCommGetTokens "sub"
+val test17 = remCommGetTokens "pop argument 0      // counter--"
+val test18 = remCommGetTokens "push argument 0"
+val test19 = remCommGetTokens "if-goto LOOP_START  // If counter > 0, goto LOOP_START"
+val test20 = remCommGetTokens "push local 0"
+
+val testa0 = operation test0
+val testa1 = operation test1
+val testa2 = operation test2
+val testa3 = operation test3
+val testa4 = operation test4
+val testa5 = operation test5
+val testa6 = operation test6
+val testa7 = operation test7
+val testa8 = operation test8
+val testa9 = operation test9
+val testa10 = operation test10
+val testa11 = operation test11
+val testa12 = operation test12
+val testa13 = operation test13
+val testa14 = operation test14
+val testa15 = operation test15
+val testa16 = operation test16
+val testa17 = operation test17
+val testa18 = operation test18
+val testa19 = operation test19
+val testa20 = operation test20
+
+val testb0 = testa0
+val testb1 = testa1
+val testb2 = testa2
+val testb3 = testa3
+val testb4 = testa4
+val testb5 = testa5
+val testb6 = testa6
+val testb7 = testa7
+val testb8 = testa8
+val testb9 = testa9
+val testb10 = testa10
+val testb11 = testa11
+val testb12 = testa12
+val testb13 = testa13
+val testb14 = testa14
+val testb15 = testa15
+val testb16 = testa16
+val testb17 = testa17
+val testb18 = testa18
+val testb19 = testa19
+val testb20 = testa20

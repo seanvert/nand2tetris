@@ -50,12 +50,17 @@ fun removeComments (s : string) =
 	case s of
 		"\r\n" => NONE
 	  | "\n" => NONE
-	  | _ => if substring (s, 0, 2) = "//" then NONE else SOME s
+	  | _ => SOME (hd (String.fields (fn x => x = #"/") s))
+(* if substring (s, 0, 2) = "//" then NONE else SOME s *)
 
 fun getTokens s =
 	case s of
 		NONE => []
-	  | SOME s  => String.tokens (fn x => x = #" ") s
+	  | SOME s  => (let 
+		  val SOME str = String.fromString s
+	  in
+		  String.tokens (fn x => x = #" ") str
+	  end)
 
 val remCommGetTokens = getTokens o removeComments
 
@@ -98,7 +103,7 @@ fun memOperations (q, w, e) =
 
 fun readLabelFlow p1 p2 =
 	let
-
+		val _ = print ("LabelFlow: " ^ p1 ^ p2 ^ "\n")
 	in
 	case p1 of
 		"label" => (Label, LabelName p2)
@@ -117,16 +122,23 @@ val getOperationsFromTokens = operation
 
 fun writeLabelops (label, LabelName s) =
 	let
-		val _ = print (s ^ "a")
+		fun aux str = 
+			case str of
+				[] => ""
+			  | (x::xs) => (case x of
+							   #"\n" => "" ^ (aux xs)
+							 | #"\r" => "" ^ (aux xs)
+							 | _ => (Char.toString x) ^ (aux xs))
+		val str = aux (String.explode s)
 	in
 	case label of
-		Label => "(" ^ s ^ ")"
-	  | Goto => "@" ^ s ^ "\n\
+		Label => "(" ^ str ^ ")"
+	  | Goto => "@" ^ str ^ "\n\
 	  \0;JMP\n"
 	  | Ifgoto => "@SP\n\
 	  \AM=M-1\n\
 	  \D=M\n\
-	  \@" ^ s ^ "\n\
+	  \@" ^ str ^ "\n\
 	  \D;JEQ\n"
 	end
 
@@ -312,5 +324,5 @@ fun readfile (input, output) =
 		aux readline 0
 	end
 
-val _ = readfile ((hd args), filename ^ ".asm")
-val _ = OS.Process.exit(OS.Process.success)
+(* val _ = readfile ((hd args), filename ^ ".asm") *)
+(* val _ = OS.Process.exit(OS.Process.success) *)
