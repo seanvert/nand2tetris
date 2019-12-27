@@ -117,7 +117,7 @@ val getOperationsFromTokens = operation
 
 fun writeLabelops (label, LabelName s) =
 	let
-		val _ = print s
+		val _ = print (s ^ "a")
 	in
 	case label of
 		Label => "(" ^ s ^ ")"
