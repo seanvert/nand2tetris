@@ -66,15 +66,15 @@ val remCommGetTokens = getTokens o removeComments
 
 fun logicalIdentifier s =
 	case s of
-		"add\r\n" => Add
-	  | "sub\r\n" => Sub
-	  | "neg\r\n" => Neg
-	  | "eq\r\n" => Eq
-	  | "gt\r\n" => Gt
-	  | "lt\r\n" => Lt
-	  | "and\r\n" => And
-	  | "or\r\n" => Or
-	  | "not\r\n" => Not
+		"add" => Add
+	  | "sub" => Sub
+	  | "neg" => Neg
+	  | "eq" => Eq
+	  | "gt" => Gt
+	  | "lt" => Lt
+	  | "and" => And
+	  | "or" => Or
+	  | "not" => Not
 	  | _ => raise logicalError
 
 fun segmentIdentifier s =
@@ -120,19 +120,19 @@ fun operation (p : string list) =
 
 val getOperationsFromTokens = operation
 
-fun writeLabelops (label, LabelName s) =
+fun writeLabelops (label, LabelName str) =
 	let
-		fun aux str = 
-			case str of
-				[] => ""
-			  | (x::xs) => (case x of
-							   #"\n" => "" ^ (aux xs)
-							 | #"\r" => "" ^ (aux xs)
-							 | _ => (Char.toString x) ^ (aux xs))
-		val str = aux (String.explode s)
+		(* fun aux str =  *)
+		(* 	case str of *)
+		(* 		[] => "" *)
+		(* 	  | (x::xs) => (case x of *)
+		(* 					   #"\n" => "" ^ (aux xs) *)
+		(* 					 | #"\r" => "" ^ (aux xs) *)
+		(* 					 | _ => (Char.toString x) ^ (aux xs)) *)
+		(* val str = aux (String.explode s) *)
 	in
 	case label of
-		Label => "(" ^ str ^ ")"
+		Label => "(" ^ str ^ ")\n"
 	  | Goto => "@" ^ str ^ "\n\
 	  \0;JMP\n"
 	  | Ifgoto => "@SP\n\
@@ -324,5 +324,5 @@ fun readfile (input, output) =
 		aux readline 0
 	end
 
-(* val _ = readfile ((hd args), filename ^ ".asm") *)
-(* val _ = OS.Process.exit(OS.Process.success) *)
+val _ = readfile ((hd args), filename ^ ".asm")
+val _ = OS.Process.exit(OS.Process.success)

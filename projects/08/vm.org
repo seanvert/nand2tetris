@@ -117,15 +117,15 @@ val remCommGetTokens = getTokens o removeComments
 #+begin_src sml
 fun logicalIdentifier s =
 	case s of
-		"add\r\n" => Add
-	  | "sub\r\n" => Sub
-	  | "neg\r\n" => Neg
-	  | "eq\r\n" => Eq
-	  | "gt\r\n" => Gt
-	  | "lt\r\n" => Lt
-	  | "and\r\n" => And
-	  | "or\r\n" => Or
-	  | "not\r\n" => Not
+		"add" => Add
+	  | "sub" => Sub
+	  | "neg" => Neg
+	  | "eq" => Eq
+	  | "gt" => Gt
+	  | "lt" => Lt
+	  | "and" => And
+	  | "or" => Or
+	  | "not" => Not
 	  | _ => raise logicalError
 
 #+end_src
@@ -222,19 +222,9 @@ esses nomes dos tipos das labels ficaram bem confusos, depois acho que
 seria bom trocar.
 
 #+begin_src sml
-fun writeLabelops (label, LabelName s) =
-	let
-		fun aux str = 
-			case str of
-				[] => ""
-			  | (x::xs) => (case x of
-							   #"\n" => "" ^ (aux xs)
-							 | #"\r" => "" ^ (aux xs)
-							 | _ => (Char.toString x) ^ (aux xs))
-		val str = aux (String.explode s)
-	in
+fun writeLabelops (label, LabelName str) =
 	case label of
-		Label => "(" ^ str ^ ")"
+		Label => "(" ^ str ^ ")\n"
 	  | Goto => "@" ^ str ^ "\n\
 	  \0;JMP\n"
 	  | Ifgoto => "@SP\n\
@@ -242,7 +232,6 @@ fun writeLabelops (label, LabelName s) =
 	  \D=M\n\
 	  \@" ^ str ^ "\n\
 	  \D;JEQ\n"
-	end
 		
 #+end_src
 
@@ -482,7 +471,7 @@ fun readfile (input, output) =
 * exit success
 
 #+begin_src sml
-(* val _ = readfile ((hd args), filename ^ ".asm") *)
-(* val _ = OS.Process.exit(OS.Process.success) *)
+val _ = readfile ((hd args), filename ^ ".asm")
+val _ = OS.Process.exit(OS.Process.success)
 #+end_src
 
