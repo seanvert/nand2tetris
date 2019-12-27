@@ -218,10 +218,14 @@ seria bom trocar.
 #+begin_src sml
 fun writeLabelops (label, LabelName s) =
 	let
+		val expl = String.explode s
 		fun aux str = 
-			case String.explode str of
+			case str of
 				[] => ""
-			  | (x::xs) => 
+			  | (x::xs) => (case x of
+							   #"\n" => "" ^ (aux xs)
+							 | #"\r" => "" ^ (aux xs)
+							 | _ => (Char.toString x) ^ (aux xs))
 	in
 	case label of
 		Label => "(" ^ s ^ ")"
