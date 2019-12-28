@@ -44,10 +44,13 @@ datatype line = Operation of arithmlogi
 
 val args = CommandLine.arguments()
 val parsedDirPathArgs = String.tokens (fn x => x = #"/") (hd args)
+
 fun getFilename (p::ph) =
 	case ph of
 		[] => p
 	  | _ => getFilename ph
+
+
 val filenameExtension = getFilename parsedDirPathArgs
 val filename = hd (String.tokens (fn x => x = #".") filenameExtension)
 val _ = print filename
@@ -55,20 +58,25 @@ val _ = print filename
 (* val filename = "asd" *)
 
 fun removeComments (s : string) =
+	let
+		fun getStrFromLine str =
+			case String.fromString str of
+				NONE => ""
+			  | SOME s => s
+		val str = getStrFromLine s
+	in
 	case s of
 		"\r\n" => NONE
 	  | "\n" => NONE
-	  | _ => SOME (hd (String.fields (fn x => x = #"/") s))
+	  | _ => SOME (hd (String.fields (fn x => x = #"/") str))
+	end
 (* if substring (s, 0, 2) = "//" then NONE else SOME s *)
 
 fun getTokens s =
 	case s of
 		NONE => []
-	  | SOME s  => (let 
-		  val SOME str = String.fromString s
-	  in
-		  String.tokens (fn x => x = #" ") str
-	  end)
+	  | SOME s  => String.tokens (fn x => x = #" ") s
+
 
 val remCommGetTokens = getTokens o removeComments
 
@@ -322,5 +330,7 @@ fun readfile (input, output) =
 		aux readline 0
 	end
 
-val _ = readfile ((hd args), filename ^ ".asm")
+val filePath = hd (String.tokens (fn x => x = #".") (hd args))
+(* val _ print hd parsedDirPathArgs *)
+val _ = readfile ((hd args), filePath ^ ".asm")
 val _ = OS.Process.exit(OS.Process.success)

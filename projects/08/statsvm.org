@@ -1,0 +1,33 @@
+* Basic Loop
+
+** ✓ PRONTO push constant 0
+linha 0-6
+
+** ✓ PRONTO pop local 0
+linha 7-18
+
+** label loop _ start
+
+** push argument 0
+linha 
+
+** push local 0
+
+** add
+
+** pop local 0
+
+** push argument 0
+
+** push constant 1
+
+** sub
+
+** pop argument 0
+
+** push argument 0
+
+** if goto loop _ start
+
+** push local 0
+

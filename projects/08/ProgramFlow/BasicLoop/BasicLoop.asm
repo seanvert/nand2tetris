@@ -111,7 +111,7 @@ M=M+1
 AM=M-1
 D=M
 @LOOP_START
-D;JEQ
+D;JNE
 @LCL
 D=M
 @0
