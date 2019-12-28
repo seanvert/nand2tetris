@@ -91,7 +91,7 @@ val filename = hd (String.tokens (fn x => x = #".") filenameExtension)
 #+end_src
 
 #+RESULTS:
-: stdIn:788.5-791.25 Warning: match nonexhaustive
+: stdIn:1146.5-1149.25 Warning: match nonexhaustive
 :           p :: ph => ...
 :   
 : 
@@ -120,14 +120,11 @@ fun getTokens s =
 		NONE => []
 	  | SOME s  => String.tokens (fn x => x = #" ") s
 
-
 val remCommGetTokens = getTokens o removeComments
 
 #+end_src
 
 #+RESULTS:
-: stdIn:800.7-800.37 Warning: binding not exhaustive
-:           SOME str = ...
 : val removeComments = fn : string -> string option
 : val getTokens = fn : string option -> string list
 : val remCommGetTokens = fn : string -> string list
@@ -195,7 +192,7 @@ fun memOperations (q, w, e) =
 #+end_src
 
 #+RESULTS:
-: stdIn:845.7-845.32 Warning: binding not exhaustive
+: stdIn:1210.7-1210.32 Warning: binding not exhaustive
 :           SOME i = ...
 : val segmentIdentifier = fn : string -> segment
 : val memOperations = fn : string * string * string -> stackop * segment * index
@@ -263,8 +260,9 @@ fun writeLabelops (label, LabelName str) =
 
 ** write mem operations
 
-*** write push
-
+*** ☛ TODO write push
+dá pra mexer na parte final do código de assembly e deixar o código
+mais enxuto
 #+begin_src sml
 fun writePush seg (Index i)  =
 	let
@@ -320,8 +318,9 @@ fun writePush seg (Index i)  =
 #+RESULTS:
 : val writePush = fn : segment -> index -> string
 
-*** write pop
-
+*** ☛ TODO write pop
+mesma coisa, acho que seria uma boa coloca uma string que é só para
+pegar o ponteiro da stack e puxar o valor
 #+begin_src sml
 fun writePop seg (Index i) =
 	let
@@ -444,14 +443,16 @@ fun writeLogArith operation n =
 #+end_src
 
 #+RESULTS:
-: stdIn:1022.9-1022.17 Error: unbound variable or constructor: filename
-: stdIn:1018.9-1018.17 Error: unbound variable or constructor: filename
-: stdIn:1016.9-1016.17 Error: unbound variable or constructor: filename
-: stdIn:1012.9-1012.17 Error: unbound variable or constructor: filename
-: stdIn:1010.9-1010.17 Error: unbound variable or constructor: filename
+: stdIn:1387.9-1387.17 Error: unbound variable or constructor: filename
+: stdIn:1383.9-1383.17 Error: unbound variable or constructor: filename
+: stdIn:1381.9-1381.17 Error: unbound variable or constructor: filename
+: stdIn:1377.9-1377.17 Error: unbound variable or constructor: filename
+: stdIn:1375.9-1375.17 Error: unbound variable or constructor: filename
 
-** main function
+** ⚑ ESPERANDO main function
+function calling protocol precisa implemenar
 
+também está faltando implementar o contador de variáveis
 #+begin_src sml
 fun codeWriter line n =
 	case line of
@@ -467,7 +468,7 @@ fun getLineWriteCode s n = codeWriter (getOperation s) n
 #+end_src
 
 #+RESULTS:
-: stdIn:1040.18-1040.31 Error: unbound variable or constructor: writeLogArith
+: stdIn:1405.18-1405.31 Error: unbound variable or constructor: writeLogArith
 
 * ☛ TODO read stream, write stream
 falta mexer em algumas coisas, passar o número de variáveis criadas
@@ -494,7 +495,7 @@ fun readfile (input, output) =
 #+end_src
 
 #+RESULTS:
-: stdIn:1059.45-1059.61 Error: unbound variable or constructor: getLineWriteCode
+: stdIn:1424.45-1424.61 Error: unbound variable or constructor: getLineWriteCode
 
 * ☛ TODO exit success
 adicionar a output com o path correto
@@ -508,6 +509,6 @@ val _ = OS.Process.exit(OS.Process.success)
 #+end_src
 
 #+RESULTS:
-: stdIn:1066.9-1066.17 Error: unbound variable or constructor: readfile
-: stdIn:1066.30-1066.38 Error: unbound variable or constructor: filename
+: stdIn:1415.21-1415.25 Error: unbound variable or constructor: args
+: stdIn:1431.9-1431.17 Error: unbound variable or constructor: readfile
 
