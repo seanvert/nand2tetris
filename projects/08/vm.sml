@@ -1,4 +1,5 @@
-exception Error
+exception labelError
+exception pushConstantError
 exception segmentError
 exception logicalError
 exception stackopError
@@ -42,7 +43,14 @@ datatype line = Operation of arithmlogi
 			  | Empty
 
 val args = CommandLine.arguments()
-val filename = hd (String.tokens (fn x => x = #".") (hd args))
+val parsedDirPathArgs = String.tokens (fn x => x = #"/") (hd args)
+fun getFilename (p::ph) =
+	case ph of
+		[] => p
+	  | _ => getFilename ph
+val filenameExtension = getFilename parsedDirPathArgs
+val filename = hd (String.tokens (fn x => x = #".") filenameExtension)
+val _ = print filename
 (* placeholder só pra teste  *)
 (* val filename = "asd" *)
 
@@ -109,6 +117,7 @@ fun readLabelFlow p1 p2 =
 		"label" => (Label, LabelName p2)
 	  | "goto" => (Goto, LabelName p2)
 	  | "if-goto" => (Ifgoto, LabelName p2)
+	  | _ => raise labelError
 	end
 
 fun operation (p : string list) =
@@ -121,16 +130,6 @@ fun operation (p : string list) =
 val getOperationsFromTokens = operation
 
 fun writeLabelops (label, LabelName str) =
-	let
-		(* fun aux str =  *)
-		(* 	case str of *)
-		(* 		[] => "" *)
-		(* 	  | (x::xs) => (case x of *)
-		(* 					   #"\n" => "" ^ (aux xs) *)
-		(* 					 | #"\r" => "" ^ (aux xs) *)
-		(* 					 | _ => (Char.toString x) ^ (aux xs)) *)
-		(* val str = aux (String.explode s) *)
-	in
 	case label of
 		Label => "(" ^ str ^ ")\n"
 	  | Goto => "@" ^ str ^ "\n\
@@ -140,7 +139,6 @@ fun writeLabelops (label, LabelName str) =
 	  \D=M\n\
 	  \@" ^ str ^ "\n\
 	  \D;JEQ\n"
-	end
 
 fun writePush seg (Index i)  =
 	let
@@ -224,7 +222,7 @@ fun writePop seg (Index i) =
 		Argument => aux "ARG" n
 	  | Local => aux "LCL" n
 	  | Static => auxStaticTemp i 16
-	  | Constant => raise Error
+	  | Constant => raise pushConstantError
 	  | This => aux "THIS" n
 	  | That => aux "THAT" n
 	  | Pointer => (case i of

@@ -2,7 +2,8 @@
 * exceptions
 
 #+begin_src sml
-exception Error
+exception labelError
+exception pushConstantError
 exception segmentError
 exception logicalError
 exception stackopError
@@ -70,11 +71,18 @@ datatype line
   | Operation of arithmlogi
 #+end_example
 
-* arguments
-
+* ☛ TODO arguments
+fazer alguma coisa pra pegar o nome dos negócios direito
 #+begin_src sml
 val args = CommandLine.arguments()
-val filename = hd (String.tokens (fn x => x = #".") (hd args))
+val parsedDirPathArgs = String.tokens (fn x => x = #"/") (hd args)
+fun getFilename (p::ph) =
+	case ph of
+		[] => p
+	  | _ => getFilename ph
+val filenameExtension = getFilename parsedDirPathArgs
+val filename = hd (String.tokens (fn x => x = #".") filenameExtension)
+
 (* placeholder só pra teste  *)
 (* val filename = "asd" *)
 #+end_src
@@ -184,6 +192,7 @@ fun readLabelFlow p1 p2 =
 		"label" => (Label, LabelName p2)
 	  | "goto" => (Goto, LabelName p2)
 	  | "if-goto" => (Ifgoto, LabelName p2)
+	  | _ => raise labelError
 	end
 #+end_src
 
@@ -332,7 +341,7 @@ fun writePop seg (Index i) =
 		Argument => aux "ARG" n
 	  | Local => aux "LCL" n
 	  | Static => auxStaticTemp i 16
-	  | Constant => raise Error
+	  | Constant => raise pushConstantError
 	  | This => aux "THIS" n
 	  | That => aux "THAT" n
 	  | Pointer => (case i of
