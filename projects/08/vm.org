@@ -272,27 +272,35 @@ fun functionOperations command function kargs =
 	case command of
 		"call" => Call (Name fname, Localargs args)
 	  | "function" => Declaration (Name fname, Localargs args)
-	  | "return" => Return
 	  | _ => raise functionOperationError
 	end
+
+fun functionReturn str =
+	case str of
+		"return" => SOME Return
+	  | _ => NONE
+
 #+end_src
 
 #+RESULTS:
-: stdIn:1353.7-1353.39 Warning: binding not exhaustive
+: stdIn:1621.7-1621.39 Warning: binding not exhaustive
 :           SOME args = ...
-: stdIn:1352.7-1352.46 Warning: binding not exhaustive
+: stdIn:1620.7-1620.46 Warning: binding not exhaustive
 :           SOME fname = ...
 : val functionOperations = fn : string -> string -> string -> functionOp
+: val functionReturn = fn : string -> functionOp option
 
 ** ☛ TODO main function
 falta dar um jeito nisso e melhorar a maneira que ele escolhe as
 operações. Por enquanto ele vai funcionar bem.
 
-falta fazer a operação de return function
+non exhaustive
 #+begin_src sml
 fun operation (p : string list) =
 	case p of
-		(p1::[]) => Operation (logicalIdentifier p1)
+		(p1::[]) => (case functionReturn p1 of
+						 SOME Return => FunctionCommand Return
+					   | NONE => Operation (logicalIdentifier p1))
 	  | (p1::p2::p3::[]) => (case pushOrPop p1 of
 								SOME Push => Memory (memOperations (Push, p2, p3))
 							  | SOME Pop => Memory (memOperations (Pop, p2, p3))
@@ -304,6 +312,10 @@ val getOperationsFromTokens = operation
 #+end_src
 
 #+RESULTS:
+: stdIn:1636.16-1638.51 Warning: match nonexhaustive
+:           SOME Return => ...
+:           NONE => ...
+:   
 : val operation = fn : string list -> line
 : val getOperationsFromTokens = fn : string list -> line
 
