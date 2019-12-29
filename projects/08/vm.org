@@ -360,7 +360,6 @@ fun writePush seg (Index i)  =
 		\A=D+A\n\
 		\D=M\n" ^ putDRegisterInTheStack
 
-
 		fun auxPointer seg = "@" ^ seg ^ "\n\
 		\D=M\n" ^ putDRegisterInTheStack
 
@@ -386,36 +385,33 @@ fun writePush seg (Index i)  =
 #+RESULTS:
 : val writePush = fn : segment -> index -> string
 
-*** ☛ TODO write pop
-mesma coisa, acho que seria uma boa coloca uma string que é só para
-pegar o ponteiro da stack e puxar o valor
+*** ✓ PRONTO write pop
+
 #+begin_src sml
 fun writePop seg (Index i) =
 	let
+		val stackValueIntoDRegister = "@SP\n\
+		\AM=M-1\n\
+		\D=M\n"
+
 		val n = Int.toString i
+
 		fun aux seg index = "@" ^ seg ^ "\n\
 		\D=M\n\
 		\@" ^ index ^ "\n\
 		\D=D+A\n\
 		\@" ^ seg ^ index ^ "\n\
-		\M=D\n\
-		\@SP\n\
-		\AM=M-1\n\
-		\D=M\n\
-		\@" ^ seg ^ index ^ "\n\
+		\M=D\n" ^ stackValueIntoDRegister ^
+		"@" ^ seg ^ index ^ "\n\
 		\A=M\n\
 		\M=D\n"
 
-		fun auxPointer seg = "@SP\n\
-		\AM=M-1\n\
-		\D=M\n\
-		\@" ^ seg ^ "\n\
+		fun auxPointer seg = stackValueIntoDRegister ^
+		"@" ^ seg ^ "\n\
 		\M=D\n"
 
-		fun auxStaticTemp n x = "@SP\n\
-		\AM=M-1\n\
-		\D=M\n\
-		\@" ^ Int.toString (n + x) ^ "\n\
+		fun auxStaticTemp n x = stackValueIntoDRegister ^
+		"@" ^ Int.toString (n + x) ^ "\n\
 		\M=D\n"
 	in
 	case seg of
