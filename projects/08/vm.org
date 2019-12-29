@@ -515,16 +515,21 @@ depende das funções de memória  writeStackMemOp
 
 #+begin_src sml
 fun writeFunctionOps fop =
+	let
+		fun initializeArgs n = writeStackMemOp (Push, Constant, Index 0) ^ 
+							   (writeStackMemOp (Pop, Local, Index n))
+	in
 	case fop of
-		Declaration (Name fname, Localargs k) => "(" ^ fname ^ ")\n"
+		Declaration (Name fname, Localargs k) => "(" ^ fname ^ ")\n\
+		\" ^ foldr (fn (x,y) => x ^ y) "" (List.tabulate (k, initializeArgs))
 	  | Call (Name fname, Localargs k) => ""
 	  | Return => ""
+	end
 
 #+end_src
 
 #+RESULTS:
 : val writeFunctionOps = fn : functionOp -> string
-
 
 ** ⚑ ESPERANDO main function
 function calling protocol precisa implemenar

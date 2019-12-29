@@ -184,42 +184,29 @@ fun writeLabelops (label, LabelName str) =
 
 fun writePush seg (Index i)  =
 	let
+		val putDRegisterInTheStack = "@SP\n\
+		\A=M\n\
+		\M=D\n\
+		\@SP\n\
+		\M=M+1\n"
+
 		val n = Int.toString i
+
 		fun aux seg index = "@" ^ seg ^ "\n\
 		\D=M\n\
 		\@" ^ index ^ "\n\
 		\A=D+A\n\
-		\D=M\n\
-		\@SP\n\
-		\A=M\n\
-		\M=D\n\
-		\@SP\n\
-		\M=M+1\n"
+		\D=M\n" ^ putDRegisterInTheStack
 
 		fun auxPointer seg = "@" ^ seg ^ "\n\
-		\D=M\n\
-		\@SP\n\
-		\A=M\n\
-		\M=D\n\
-		\@SP\n\
-		\M=M+1\n"
+		\D=M\n" ^ putDRegisterInTheStack
 
 		fun auxStaticTemp n x = "@" ^ Int.toString (n + x) ^ "\n\
-		\D=M\n\
-		\@SP\n\
-		\A=M\n\
-		\M=D\n\
-		\@SP\n\
-		\M=M+1\n"
+		\D=M\n" ^ putDRegisterInTheStack
 	in
 	case seg of
 		Constant => "@" ^ n ^ "\n\
-		\D=A\n\
-		\@SP\n\
-		\A=M\n\
-		\M=D\n\
-		\@SP\n\
-		\M=M+1\n"
+		\D=A\n" ^ putDRegisterInTheStack
 	  | Argument => aux "ARG" n
 	  | Local => aux "LCL" n
 	  | Static => auxStaticTemp i 16
@@ -234,30 +221,28 @@ fun writePush seg (Index i)  =
 
 fun writePop seg (Index i) =
 	let
+		val stackValueIntoDRegister = "@SP\n\
+		\AM=M-1\n\
+		\D=M\n"
+
 		val n = Int.toString i
+
 		fun aux seg index = "@" ^ seg ^ "\n\
 		\D=M\n\
 		\@" ^ index ^ "\n\
 		\D=D+A\n\
 		\@" ^ seg ^ index ^ "\n\
-		\M=D\n\
-		\@SP\n\
-		\AM=M-1\n\
-		\D=M\n\
-		\@" ^ seg ^ index ^ "\n\
+		\M=D\n" ^ stackValueIntoDRegister ^
+		"@" ^ seg ^ index ^ "\n\
 		\A=M\n\
 		\M=D\n"
 
-		fun auxPointer seg = "@SP\n\
-		\AM=M-1\n\
-		\D=M\n\
-		\@" ^ seg ^ "\n\
+		fun auxPointer seg = stackValueIntoDRegister ^
+		"@" ^ seg ^ "\n\
 		\M=D\n"
 
-		fun auxStaticTemp n x = "@SP\n\
-		\AM=M-1\n\
-		\D=M\n\
-		\@" ^ Int.toString (n + x) ^ "\n\
+		fun auxStaticTemp n x = stackValueIntoDRegister ^
+		"@" ^ Int.toString (n + x) ^ "\n\
 		\M=D\n"
 	in
 	case seg of
