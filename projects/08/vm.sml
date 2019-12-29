@@ -32,7 +32,7 @@ datatype functionArgs = Localargs of int
 
 datatype functionOp = Declaration of functionName * functionArgs
 					| Call of functionName * functionArgs
-					| Return
+	   | Return
 
 datatype arithmlogi = Add
 					| Sub
@@ -61,7 +61,7 @@ fun getFilename (p::ph) =
 val filenameExtension = getFilename parsedDirPathArgs
 val filename = hd (String.tokens (fn x => x = #".") filenameExtension)
 (* placeholder só pra teste  *)
-val filename = "asd"
+(* val filename = "asd" *)
 
 fun removeComments (s : string) =
 	let
@@ -170,9 +170,6 @@ fun operation (p : string list) =
 	  | _ => Empty
 
 val getOperationsFromTokens = operation
-
-fun writeFunctionOps line =
-	""
 
 fun writeLabelops (label, LabelName str) =
 	case label of
@@ -339,11 +336,18 @@ fun writeLogArith operation n =
 	  | Neg => auxU "-M"
 	end
 
+fun writeFunctionOps fop =
+	case fop of
+		Declaration (Name fname, Localargs k) => "(" ^ fname ^ ")\n"
+	  | Call (Name fname, Localargs k) => ""
+	  | Return => ""
+
 fun codeWriter line n =
 	case line of
 		Operation f => writeLogArith f n
 	  | Memory s => writeStackMemOp s
 	  | Labelop lop => writeLabelops lop
+	  | FunctionCommand fop => writeFunctionOps fop
 	  | Empty => "\n"
 
 val getOperation = operation o remCommGetTokens

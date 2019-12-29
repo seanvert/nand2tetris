@@ -114,18 +114,18 @@ match nonexhaustive na função getFilename
 também precisa mudar a ordem pra ficar melhor com o final
 
 #+begin_src sml
-(* val args = CommandLine.arguments() *)
-(* val parsedDirPathArgs = String.tokens (fn x => x = #"/") (hd args) *)
+val args = CommandLine.arguments()
+val parsedDirPathArgs = String.tokens (fn x => x = #"/") (hd args)
 
-(* fun getFilename (p::ph) = *)
-(* 	case ph of *)
-(* 		[] => p *)
-(* 	  | _ => getFilename ph *)
+fun getFilename (p::ph) =
+	case ph of
+		[] => p
+	  | _ => getFilename ph
 
-(* val filenameExtension = getFilename parsedDirPathArgs *)
-(* val filename = hd (String.tokens (fn x => x = #".") filenameExtension) *)
+val filenameExtension = getFilename parsedDirPathArgs
+val filename = hd (String.tokens (fn x => x = #".") filenameExtension)
 (* placeholder só pra teste  *)
-val filename = "asd"
+(* val filename = "asd" *)
 #+end_src
 
 #+RESULTS:
@@ -342,48 +342,34 @@ fun writeLabelops (label, LabelName str) =
 
 ** write mem operations
 
-*** ☛ TODO write push
-dá pra mexer na parte final do código de assembly e deixar o código
-mais enxuto
+*** ✓ PRONTO write push
 #+begin_src sml
 fun writePush seg (Index i)  =
 	let
+		val putDRegisterInTheStack = "@SP\n\
+		\A=M\n\
+		\M=D\n\
+		\@SP\n\
+		\M=M+1\n"
+
 		val n = Int.toString i
+
 		fun aux seg index = "@" ^ seg ^ "\n\
 		\D=M\n\
 		\@" ^ index ^ "\n\
 		\A=D+A\n\
-		\D=M\n\
-		\@SP\n\
-		\A=M\n\
-		\M=D\n\
-		\@SP\n\
-		\M=M+1\n"
+		\D=M\n" ^ putDRegisterInTheStack
+
 
 		fun auxPointer seg = "@" ^ seg ^ "\n\
-		\D=M\n\
-		\@SP\n\
-		\A=M\n\
-		\M=D\n\
-		\@SP\n\
-		\M=M+1\n"
+		\D=M\n" ^ putDRegisterInTheStack
 
 		fun auxStaticTemp n x = "@" ^ Int.toString (n + x) ^ "\n\
-		\D=M\n\
-		\@SP\n\
-		\A=M\n\
-		\M=D\n\
-		\@SP\n\
-		\M=M+1\n"
+		\D=M\n" ^ putDRegisterInTheStack
 	in
 	case seg of
 		Constant => "@" ^ n ^ "\n\
-		\D=A\n\
-		\@SP\n\
-		\A=M\n\
-		\M=D\n\
-		\@SP\n\
-		\M=M+1\n"
+		\D=A\n" ^ putDRegisterInTheStack
 	  | Argument => aux "ARG" n
 	  | Local => aux "LCL" n
 	  | Static => auxStaticTemp i 16
@@ -534,7 +520,7 @@ depende das funções de memória  writeStackMemOp
 #+begin_src sml
 fun writeFunctionOps fop =
 	case fop of
-		Declaration (Name fname, Localargs k) => "(" ^ fname ^ ")"
+		Declaration (Name fname, Localargs k) => "(" ^ fname ^ ")\n"
 	  | Call (Name fname, Localargs k) => ""
 	  | Return => ""
 
