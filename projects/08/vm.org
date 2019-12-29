@@ -8,13 +8,20 @@ exception segmentError
 exception logicalError
 exception stackopError
 exception invalidPointerValue
+exception functionOperationError
 #+end_src
 
 #+RESULTS:
 
-* datatypes: segment, arithmlogi, stackop, labelFlow, index, labelString, line
+* ☛ TODO datatypes: segment, arithmlogi, stackop, labelFlow, index, labelString, line
+- trocar esse nome das labels também seria uma boa
+
+** memory datatypes
 
 #+begin_src sml
+datatype stackop = Push
+				 | Pop
+
 datatype segment = Argument
 				 | Local
 				 | Static
@@ -24,7 +31,52 @@ datatype segment = Argument
 				 | Pointer
 				 | Temp
 
+datatype index = Index of int
+#+end_src
 
+#+RESULTS:
+: datatype stackop = Pop | Push
+: datatype segment
+:   = Argument | Constant | Local | Pointer | Static | Temp | That | This
+: datatype index = Index of int
+
+** label datatypes
+
+#+begin_src sml
+datatype labelFlow = Label
+				   | Goto
+				   | Ifgoto
+
+datatype labelString = LabelName of string
+
+
+#+end_src
+
+#+RESULTS:
+: datatype labelFlow = Goto | Ifgoto | Label
+: datatype labelString = LabelName of string
+
+** function datatypes
+#+begin_src sml
+datatype functionName = Name of string
+
+datatype functionArgs = Localargs of int
+
+datatype functionOp = Declaration of functionName * functionArgs
+					| Call of functionName * functionArgs
+	   | Return
+#+end_src
+
+#+RESULTS:
+: datatype functionName = Name of string
+: datatype functionArgs = Localargs of int
+: datatype functionOp
+:   = Call of functionName * functionArgs
+:   | Declaration of functionName * functionArgs
+:   | Return
+
+** arithmetic and logic datatypes
+#+begin_src sml
 datatype arithmlogi = Add
 					| Sub
 					| Neg
@@ -34,46 +86,33 @@ datatype arithmlogi = Add
 					| And
 					| Or
 					| Not
+#+end_src
 
+#+RESULTS:
+: datatype arithmlogi = Add | And | Eq | Gt | Lt | Neg | Not | Or | Sub
 
-datatype stackop = Push
-				 | Pop
-
-datatype labelFlow = Label
-				   | Goto
-				   | Ifgoto
-
-datatype index = Index of int
-
-datatype labelString = LabelName of string
-							  
+** line datatype
+#+begin_src sml
 datatype line = Operation of arithmlogi
 			  | Memory of stackop * segment * index
 			  | Labelop of labelFlow * labelString
+			  | FunctionCommand of functionOp
 			  | Empty
-
 
 #+end_src
 
 #+RESULTS:
-#+begin_example
-datatype segment
-  = Argument | Constant | Local | Pointer | Static | Temp | That | This
-datatype arithmlogi = Add | And | Eq | Gt | Lt | Neg | Not | Or | Sub
-datatype stackop = Pop | Push
-datatype labelFlow = Goto | Ifgoto | Label
-datatype index = Index of int
-datatype labelString = LabelName of string
-datatype line
-  = Empty
-  | Labelop of labelFlow * labelString
-  | Memory of stackop * segment * index
-  | Operation of arithmlogi
-#+end_example
+: datatype line
+:   = Empty
+:   | FunctionCommand of functionOp
+:   | Labelop of labelFlow * labelString
+:   | Memory of stackop * segment * index
+:   | Operation of arithmlogi
 
 * ☛ TODO arguments
 match nonexhaustive na função getFilename
 também precisa mudar a ordem pra ficar melhor com o final
+
 #+begin_src sml
 val args = CommandLine.arguments()
 val parsedDirPathArgs = String.tokens (fn x => x = #"/") (hd args)
@@ -83,7 +122,6 @@ fun getFilename (p::ph) =
 		[] => p
 	  | _ => getFilename ph
 
-
 val filenameExtension = getFilename parsedDirPathArgs
 val filename = hd (String.tokens (fn x => x = #".") filenameExtension)
 (* placeholder só pra teste  *)
@@ -91,7 +129,7 @@ val filename = hd (String.tokens (fn x => x = #".") filenameExtension)
 #+end_src
 
 #+RESULTS:
-: stdIn:1146.5-1149.25 Warning: match nonexhaustive
+: stdIn:755.5-758.25 Warning: match nonexhaustive
 :           p :: ph => ...
 :   
 : 
@@ -152,7 +190,14 @@ fun logicalIdentifier s =
 #+end_src
 
 #+RESULTS:
-: val logicalIdentifier = fn : string -> arithmlogi
+: stdIn:796.15-796.18 Error: unbound variable or constructor: Not
+: stdIn:795.14-795.16 Error: unbound variable or constructor: Or
+: stdIn:794.15-794.18 Error: unbound variable or constructor: And
+: stdIn:793.14-793.16 Error: unbound variable or constructor: Lt
+: stdIn:792.14-792.16 Error: unbound variable or constructor: Gt
+: stdIn:791.14-791.16 Error: unbound variable or constructor: Eq
+: stdIn:790.15-790.18 Error: unbound variable or constructor: Neg
+: stdIn:789.15-789.18 Error: unbound variable or constructor: Sub
 
 *** ☛ TODO memory identifier
 colocar um erro e uma função auxiliar para mexer com esses
@@ -178,24 +223,38 @@ fun segmentIdentifier s =
 	  | _ => raise segmentError
 	end
 
+fun pushOrPop str =
+	case str of
+		"push" => SOME Push
+	  | "pop" => SOME Pop
+	  | _ => NONE
+
 fun memOperations (q, w, e) =
 	let
 		val SOME i = Int.fromString e
 		val s = segmentIdentifier w
 	in
 		case q of
-			"push" => (Push, s, Index i)
-		  | "pop" => (Pop, s, Index i)
-		  | _ => raise stackopError
+			Push => (Push, s, Index i)
+		  | Pop => (Pop, s, Index i)
 	end
 
 #+end_src
 
 #+RESULTS:
-: stdIn:1210.7-1210.32 Warning: binding not exhaustive
-:           SOME i = ...
-: val segmentIdentifier = fn : string -> segment
-: val memOperations = fn : string * string * string -> stackop * segment * index
+#+begin_example
+stdIn:810.16-810.20 Error: unbound variable or constructor: Temp
+stdIn:809.19-809.26 Error: unbound variable or constructor: Pointer
+stdIn:808.16-808.20 Error: unbound variable or constructor: That
+stdIn:807.16-807.20 Error: unbound variable or constructor: This
+stdIn:806.20-806.28 Error: unbound variable or constructor: Constant
+stdIn:805.18-805.24 Error: unbound variable or constructor: Static
+stdIn:804.17-804.22 Error: unbound variable or constructor: Local
+stdIn:803.17-803.25 Error: unbound variable or constructor: Argument
+stdIn:817.20-817.23 Error: unbound variable or constructor: Pop
+stdIn:816.18-816.22 Error: unbound variable or constructor: Push
+stdIn:827.23-827.28 Error: unbound variable or constructor: Index
+#+end_example
 
 *** label flow identifier
 
@@ -213,16 +272,51 @@ fun readLabelFlow p1 p2 =
 #+end_src
 
 #+RESULTS:
-: val readLabelFlow = fn : string -> string -> labelFlow * labelString
+: stdIn:836.28-836.37 Error: unbound variable or constructor: LabelName
+: stdIn:836.20-836.26 Error: unbound variable or constructor: Ifgoto
+: stdIn:835.23-835.32 Error: unbound variable or constructor: LabelName
+: stdIn:835.17-835.21 Error: unbound variable or constructor: Goto
+: stdIn:834.22-834.31 Error: unbound variable or constructor: LabelName
 
-** ☛ TODO main function
+*** ☛ TODO function operations identifier
+not exhaustive
+
+#+begin_src sml
+fun functionOperations command function kargs =
+	let
+		val SOME fname = String.fromString function
+		val SOME args = Int.fromString kargs
+	in
+	case command of
+		"call" => Call (Name fname, Localargs args)
+	  | "function" => Declaration (Name fname, Localargs args)
+	  | "return" => Return
+	  | _ => raise functionOperationError
+	end
+#+end_src
+
+#+RESULTS:
+: stdIn:847.18-847.24 Error: unbound variable or constructor: Return
+: stdIn:846.20-846.31 Error: unbound variable or constructor: Declaration
+: stdIn:846.45-846.54 Error: unbound variable or constructor: Localargs
+: stdIn:846.33-846.37 Error: unbound variable or constructor: Name
+: stdIn:845.13-845.17 Error: unbound variable or constructor: Call
+: stdIn:845.31-845.40 Error: unbound variable or constructor: Localargs
+
+** ⚑ ESPERANDO main function
 falta dar um jeito nisso e melhorar a maneira que ele escolhe as
 operações. Por enquanto ele vai funcionar bem.
+
+aqui ele vai pegar options agora. acho que é melhor checar as
+operações de memória primeiro e as funções depois
 #+begin_src sml
 fun operation (p : string list) =
 	case p of
 		(p1::[]) => Operation (logicalIdentifier p1)
-	  | (p1::p2::p3::[]) => Memory (memOperations (p1, p2, p3))
+	  | (p1::p2::p3::[]) => (case pushOrPop p1 of
+								SOME Push => Memory (memOperations (Push, p2, p3))
+							  | SOME Pop => Memory (memOperations (Pop, p2, p3))
+							  | NONE => FunctionCommand (functionOperations (p1, p2, p3)))
 	  | (p1::p2::[]) => Labelop (readLabelFlow p1 p2)
 	  | _ => Empty
 
@@ -230,8 +324,18 @@ val getOperationsFromTokens = operation
 #+end_src
 
 #+RESULTS:
-: val operation = fn : string list -> line
-: val getOperationsFromTokens = fn : string list -> line
+#+begin_example
+stdIn:857.22-857.29 Error: unbound variable or constructor: Labelop
+stdIn:857.31-857.44 Error: unbound variable or constructor: readLabelFlow
+stdIn:853.32-853.41 Error: unbound variable or constructor: pushOrPop
+stdIn:856.20-856.35 Error: unbound variable or constructor: FunctionCommand
+stdIn:856.37-856.55 Error: unbound variable or constructor: functionOperations
+stdIn:855.24-855.30 Error: unbound variable or constructor: Memory
+stdIn:855.32-855.45 Error: unbound variable or constructor: memOperations
+stdIn:854.22-854.28 Error: unbound variable or constructor: Memory
+stdIn:854.30-854.43 Error: unbound variable or constructor: memOperations
+stdIn:852.15-852.24 Error: unbound variable or constructor: Operation
+#+end_example
 
 * write : line -> string
 
@@ -256,7 +360,23 @@ fun writeLabelops (label, LabelName str) =
 #+end_src
 
 #+RESULTS:
-: val writeLabelops = fn : labelFlow * labelString -> string
+#+begin_example
+stdIn:830.1-851.6 Error: non-constructor applied to argument in pattern: LabelName
+stdIn:863.12-863.29 Error: operator and operand do not agree [tycon mismatch]
+  operator domain: string * string
+  operand:         string * (char -> string)
+  in expression:
+    "(" ^ str
+stdIn:864.14-865.13 Error: operator and operand do not agree [tycon mismatch]
+  operator domain: string * string
+  operand:         string * (char -> string)
+  in expression:
+    "@" ^ str
+stdIn:869.4-870.13 Error: operator and operand do not agree [tycon mismatch]
+  operator domain: string * string
+  operand:         string * (char -> string)
+  in expression:
+#+end_example
 
 ** write mem operations
 
@@ -316,7 +436,10 @@ fun writePush seg (Index i)  =
 #+end_src
 
 #+RESULTS:
-: val writePush = fn : segment -> index -> string
+: stdIn:1.21-830.1 Error: non-constructor applied to argument in pattern: Index
+: stdIn:873.24 Error: unbound variable or constructor: i
+: stdIn:918.28 Error: unbound variable or constructor: i
+: stdIn:914.23 Error: unbound variable or constructor: i
 
 *** ☛ TODO write pop
 mesma coisa, acho que seria uma boa coloca uma string que é só para
@@ -366,7 +489,10 @@ fun writePop seg (Index i) =
 #+end_src
 
 #+RESULTS:
-: val writePop = fn : segment -> index -> string
+: stdIn:1.20-702.5 Error: non-constructor applied to argument in pattern: Index
+: stdIn:922.24 Error: unbound variable or constructor: i
+: stdIn:959.28 Error: unbound variable or constructor: i
+: stdIn:955.23 Error: unbound variable or constructor: i
 
 *** main function
 
@@ -378,7 +504,7 @@ fun writeStackMemOp s =
 #+end_src
 
 #+RESULTS:
-: val writeStackMemOp = fn : stackop * segment * index -> string
+: stdIn:964.25-964.33 Error: unbound variable or constructor: writePop
 
 ** write arithmetic and logical operations
 
@@ -443,11 +569,11 @@ fun writeLogArith operation n =
 #+end_src
 
 #+RESULTS:
-: stdIn:1387.9-1387.17 Error: unbound variable or constructor: filename
-: stdIn:1383.9-1383.17 Error: unbound variable or constructor: filename
-: stdIn:1381.9-1381.17 Error: unbound variable or constructor: filename
-: stdIn:1377.9-1377.17 Error: unbound variable or constructor: filename
-: stdIn:1375.9-1375.17 Error: unbound variable or constructor: filename
+: stdIn:1005.9-1005.17 Error: unbound variable or constructor: filename
+: stdIn:1001.9-1001.17 Error: unbound variable or constructor: filename
+: stdIn:999.9-999.17 Error: unbound variable or constructor: filename
+: stdIn:995.9-995.17 Error: unbound variable or constructor: filename
+: stdIn:993.9-993.17 Error: unbound variable or constructor: filename
 
 ** ⚑ ESPERANDO main function
 function calling protocol precisa implemenar
@@ -468,7 +594,15 @@ fun getLineWriteCode s n = codeWriter (getOperation s) n
 #+end_src
 
 #+RESULTS:
-: stdIn:1405.18-1405.31 Error: unbound variable or constructor: writeLogArith
+: stdIn:1025.6-1025.17 Error: non-constructor applied to argument in pattern: Labelop
+: stdIn:1025.21-1025.34 Error: unbound variable or constructor: writeLabelops
+: stdIn:1025.35-1025.38 Error: unbound variable or constructor: lop
+: stdIn:1024.6-1024.14 Error: non-constructor applied to argument in pattern: Memory
+: stdIn:1024.18-1024.33 Error: unbound variable or constructor: writeStackMemOp
+: stdIn:1024.34 Error: unbound variable or constructor: s
+: stdIn:1023.3-1023.14 Error: non-constructor applied to argument in pattern: Operation
+: stdIn:1023.18-1023.31 Error: unbound variable or constructor: writeLogArith
+: stdIn:1023.32 Error: unbound variable or constructor: f
 
 * ☛ TODO read stream, write stream
 falta mexer em algumas coisas, passar o número de variáveis criadas
@@ -495,7 +629,7 @@ fun readfile (input, output) =
 #+end_src
 
 #+RESULTS:
-: stdIn:1424.45-1424.61 Error: unbound variable or constructor: getLineWriteCode
+: stdIn:1042.45-1042.61 Error: unbound variable or constructor: getLineWriteCode
 
 * ☛ TODO exit success
 adicionar a output com o path correto
@@ -509,6 +643,6 @@ val _ = OS.Process.exit(OS.Process.success)
 #+end_src
 
 #+RESULTS:
-: stdIn:1415.21-1415.25 Error: unbound variable or constructor: args
-: stdIn:1431.9-1431.17 Error: unbound variable or constructor: readfile
+: stdIn:1033.21-1033.25 Error: unbound variable or constructor: args
+: stdIn:1049.9-1049.17 Error: unbound variable or constructor: readfile
 

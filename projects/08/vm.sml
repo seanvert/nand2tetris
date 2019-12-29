@@ -4,6 +4,7 @@ exception segmentError
 exception logicalError
 exception stackopError
 exception invalidPointerValue
+exception functionOperationError
 
 datatype segment = Argument
 				 | Local
@@ -14,7 +15,6 @@ datatype segment = Argument
 				 | Pointer
 				 | Temp
 
-
 datatype arithmlogi = Add
 					| Sub
 					| Neg
@@ -24,7 +24,6 @@ datatype arithmlogi = Add
 					| And
 					| Or
 					| Not
-
 
 datatype stackop = Push
 				 | Pop
@@ -40,7 +39,16 @@ datatype labelString = LabelName of string
 datatype line = Operation of arithmlogi
 			  | Memory of stackop * segment * index
 			  | Labelop of labelFlow * labelString
+			  | FunctionCommand of functionOp
 			  | Empty
+
+datatype functionName = Name of string
+
+datatype functionArgs = Localargs of int
+
+datatype functionOp = Declaration of functionName * functionArgs
+					| Call of functionName * functionArgs
+					| Return
 
 val args = CommandLine.arguments()
 val parsedDirPathArgs = String.tokens (fn x => x = #"/") (hd args)
@@ -49,7 +57,6 @@ fun getFilename (p::ph) =
 	case ph of
 		[] => p
 	  | _ => getFilename ph
-
 
 val filenameExtension = getFilename parsedDirPathArgs
 val filename = hd (String.tokens (fn x => x = #".") filenameExtension)
@@ -75,7 +82,6 @@ fun getTokens s =
 	case s of
 		NONE => []
 	  | SOME s  => String.tokens (fn x => x = #" ") s
-
 
 val remCommGetTokens = getTokens o removeComments
 
@@ -108,15 +114,20 @@ fun segmentIdentifier s =
 	  | _ => raise segmentError
 	end
 
+fun pushOrPop str =
+	case str of
+		"push" => SOME Push
+	  | "pop" => SOME Pop
+	  | _ => NONE
+
 fun memOperations (q, w, e) =
 	let
 		val SOME i = Int.fromString e
 		val s = segmentIdentifier w
 	in
 		case q of
-			"push" => (Push, s, Index i)
-		  | "pop" => (Pop, s, Index i)
-		  | _ => raise stackopError
+			Push => (Push, s, Index i)
+		  | Pop => (Pop, s, Index i)
 	end
 
 fun readLabelFlow p1 p2 =
@@ -130,10 +141,25 @@ fun readLabelFlow p1 p2 =
 	  | _ => raise labelError
 	end
 
+fun functionOperations command function kargs =
+	let
+		val SOME fname = String.fromString function
+		val SOME args = Int.fromString kargs
+	in
+	case command of
+		"call" => Call (Name fname, Localargs args)
+	  | "function" => Declaration (Name fname, Localargs args)
+	  | "return" => Return
+	  | _ => raise functionOperationError
+	end
+
 fun operation (p : string list) =
 	case p of
 		(p1::[]) => Operation (logicalIdentifier p1)
-	  | (p1::p2::p3::[]) => Memory (memOperations (p1, p2, p3))
+	  | (p1::p2::p3::[]) => (case pushOrPop p1 of
+								SOME Push => Memory (memOperations (Push, p2, p3))
+							  | SOME Pop => Memory (memOperations (Pop, p2, p3))
+							  | NONE => FunctionCommand (functionOperations (p1, p2, p3)))
 	  | (p1::p2::[]) => Labelop (readLabelFlow p1 p2)
 	  | _ => Empty
 
