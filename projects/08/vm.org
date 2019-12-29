@@ -129,7 +129,7 @@ val filename = "asd"
 #+end_src
 
 #+RESULTS:
-: stdIn:1263.5-1266.25 Warning: match nonexhaustive
+: stdIn:1703.5-1706.25 Warning: match nonexhaustive
 :           p :: ph => ...
 :   
 : 
@@ -235,7 +235,7 @@ fun memOperations (q, w, e) =
 #+end_src
 
 #+RESULTS:
-: stdIn:1331.7-1331.32 Warning: binding not exhaustive
+: stdIn:1771.7-1771.32 Warning: binding not exhaustive
 :           SOME i = ...
 : val segmentIdentifier = fn : string -> segment
 : val pushOrPop = fn : string -> stackop option
@@ -283,9 +283,9 @@ fun functionReturn str =
 #+end_src
 
 #+RESULTS:
-: stdIn:1621.7-1621.39 Warning: binding not exhaustive
+: stdIn:1793.7-1793.39 Warning: binding not exhaustive
 :           SOME args = ...
-: stdIn:1620.7-1620.46 Warning: binding not exhaustive
+: stdIn:1792.7-1792.46 Warning: binding not exhaustive
 :           SOME fname = ...
 : val functionOperations = fn : string -> string -> string -> functionOp
 : val functionReturn = fn : string -> functionOp option
@@ -312,7 +312,7 @@ val getOperationsFromTokens = operation
 #+end_src
 
 #+RESULTS:
-: stdIn:1636.16-1638.51 Warning: match nonexhaustive
+: stdIn:1808.16-1810.51 Warning: match nonexhaustive
 :           SOME Return => ...
 :           NONE => ...
 :   
@@ -327,13 +327,16 @@ val getOperationsFromTokens = operation
 - escrever o assembly
 - separar os cases
 #+begin_src sml
-fun writeFunctionOps line =
-	""
+fun writeFunctionOps fop =
+	case fop of
+		Declaration (x, y)=> ""
+	  | Call (x, y) => ""
+	  | Return => ""
 
 #+end_src
 
 #+RESULTS:
-: val writeFunctionOps = fn : 'a -> string
+: val writeFunctionOps = fn : functionOp -> string
 
 
 ** ☛ TODO write label operations
@@ -542,11 +545,11 @@ fun writeLogArith operation n =
 #+end_src
 
 #+RESULTS:
-: stdIn:1589.9-1589.17 Error: unbound variable or constructor: filename
-: stdIn:1585.9-1585.17 Error: unbound variable or constructor: filename
-: stdIn:1583.9-1583.17 Error: unbound variable or constructor: filename
-: stdIn:1579.9-1579.17 Error: unbound variable or constructor: filename
-: stdIn:1577.9-1577.17 Error: unbound variable or constructor: filename
+: stdIn:1973.9-1973.17 Error: unbound variable or constructor: filename
+: stdIn:1969.9-1969.17 Error: unbound variable or constructor: filename
+: stdIn:1967.9-1967.17 Error: unbound variable or constructor: filename
+: stdIn:1963.9-1963.17 Error: unbound variable or constructor: filename
+: stdIn:1961.9-1961.17 Error: unbound variable or constructor: filename
 
 ** ⚑ ESPERANDO main function
 function calling protocol precisa implemenar
@@ -558,6 +561,7 @@ fun codeWriter line n =
 		Operation f => writeLogArith f n
 	  | Memory s => writeStackMemOp s
 	  | Labelop lop => writeLabelops lop
+	  | FunctionCommand fop => writeFunctionOps fop
 	  | Empty => "\n"
 
 val getOperation = operation o remCommGetTokens
@@ -567,7 +571,7 @@ fun getLineWriteCode s n = codeWriter (getOperation s) n
 #+end_src
 
 #+RESULTS:
-: stdIn:1607.18-1607.31 Error: unbound variable or constructor: writeLogArith
+: stdIn:1991.18-1991.31 Error: unbound variable or constructor: writeLogArith
 
 * ☛ TODO read stream, write stream
 falta mexer em algumas coisas, passar o número de variáveis criadas
@@ -594,7 +598,7 @@ fun readfile (input, output) =
 #+end_src
 
 #+RESULTS:
-: stdIn:1042.45-1042.61 Error: unbound variable or constructor: getLineWriteCode
+: stdIn:2011.45-2011.61 Error: unbound variable or constructor: getLineWriteCode
 
 * ☛ TODO exit success
 adicionar a output com o path correto
@@ -608,6 +612,6 @@ val _ = OS.Process.exit(OS.Process.success)
 #+end_src
 
 #+RESULTS:
-: stdIn:1033.21-1033.25 Error: unbound variable or constructor: args
-: stdIn:1049.9-1049.17 Error: unbound variable or constructor: readfile
+: stdIn:2002.21-2002.25 Error: unbound variable or constructor: args
+: stdIn:2018.9-2018.17 Error: unbound variable or constructor: readfile
 

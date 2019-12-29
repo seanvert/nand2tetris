@@ -32,7 +32,7 @@ datatype functionArgs = Localargs of int
 
 datatype functionOp = Declaration of functionName * functionArgs
 					| Call of functionName * functionArgs
-	   | Return
+					| Return
 
 datatype arithmlogi = Add
 					| Sub
