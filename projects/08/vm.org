@@ -114,26 +114,22 @@ match nonexhaustive na função getFilename
 também precisa mudar a ordem pra ficar melhor com o final
 
 #+begin_src sml
-val args = CommandLine.arguments()
-val parsedDirPathArgs = String.tokens (fn x => x = #"/") (hd args)
+(* val args = CommandLine.arguments() *)
+(* val parsedDirPathArgs = String.tokens (fn x => x = #"/") (hd args) *)
 
-fun getFilename (p::ph) =
-	case ph of
-		[] => p
-	  | _ => getFilename ph
+(* fun getFilename (p::ph) = *)
+(* 	case ph of *)
+(* 		[] => p *)
+(* 	  | _ => getFilename ph *)
 
-val filenameExtension = getFilename parsedDirPathArgs
-val filename = hd (String.tokens (fn x => x = #".") filenameExtension)
+(* val filenameExtension = getFilename parsedDirPathArgs *)
+(* val filename = hd (String.tokens (fn x => x = #".") filenameExtension) *)
 (* placeholder só pra teste  *)
 val filename = "asd"
 #+end_src
 
 #+RESULTS:
-: stdIn:1703.5-1706.25 Warning: match nonexhaustive
-:           p :: ph => ...
-:   
-: 
-: uncaught exception Empty
+: val filename = "asd" : string
 
 * read functions string -> string list
 
@@ -235,7 +231,7 @@ fun memOperations (q, w, e) =
 #+end_src
 
 #+RESULTS:
-: stdIn:1771.7-1771.32 Warning: binding not exhaustive
+: stdIn:2302.7-2302.32 Warning: binding not exhaustive
 :           SOME i = ...
 : val segmentIdentifier = fn : string -> segment
 : val pushOrPop = fn : string -> stackop option
@@ -283,9 +279,9 @@ fun functionReturn str =
 #+end_src
 
 #+RESULTS:
-: stdIn:1793.7-1793.39 Warning: binding not exhaustive
+: stdIn:2324.7-2324.39 Warning: binding not exhaustive
 :           SOME args = ...
-: stdIn:1792.7-1792.46 Warning: binding not exhaustive
+: stdIn:2323.7-2323.46 Warning: binding not exhaustive
 :           SOME fname = ...
 : val functionOperations = fn : string -> string -> string -> functionOp
 : val functionReturn = fn : string -> functionOp option
@@ -312,7 +308,7 @@ val getOperationsFromTokens = operation
 #+end_src
 
 #+RESULTS:
-: stdIn:1808.16-1810.51 Warning: match nonexhaustive
+: stdIn:2339.16-2341.51 Warning: match nonexhaustive
 :           SOME Return => ...
 :           NONE => ...
 :   
@@ -323,23 +319,7 @@ val getOperationsFromTokens = operation
 
 ** ⚑ ESPERANDO init 
 
-** ⚑ ESPERANDO write function operations
-- escrever o assembly
-- separar os cases
-#+begin_src sml
-fun writeFunctionOps fop =
-	case fop of
-		Declaration (x, y)=> ""
-	  | Call (x, y) => ""
-	  | Return => ""
-
-#+end_src
-
-#+RESULTS:
-: val writeFunctionOps = fn : functionOp -> string
-
-
-** ☛ TODO write label operations
+** ☛ TODO write label operations fn : labelFlow * labelString -> string
 esses nomes dos tipos das labels ficaram bem confusos, depois acho que
 seria bom trocar.
 
@@ -545,11 +525,24 @@ fun writeLogArith operation n =
 #+end_src
 
 #+RESULTS:
-: stdIn:1973.9-1973.17 Error: unbound variable or constructor: filename
-: stdIn:1969.9-1969.17 Error: unbound variable or constructor: filename
-: stdIn:1967.9-1967.17 Error: unbound variable or constructor: filename
-: stdIn:1963.9-1963.17 Error: unbound variable or constructor: filename
-: stdIn:1961.9-1961.17 Error: unbound variable or constructor: filename
+: val writeLogArith = fn : arithmlogi -> int -> string
+
+** ⚑ ESPERANDO write function operations fn : functionOp -> string
+depende das funções de memória  writeStackMemOp
+- escrever o assembly
+
+#+begin_src sml
+fun writeFunctionOps fop =
+	case fop of
+		Declaration (Name fname, Localargs k) => "(" ^ fname ^ ")"
+	  | Call (Name fname, Localargs k) => ""
+	  | Return => ""
+
+#+end_src
+
+#+RESULTS:
+: val writeFunctionOps = fn : functionOp -> string
+
 
 ** ⚑ ESPERANDO main function
 function calling protocol precisa implemenar
@@ -571,7 +564,9 @@ fun getLineWriteCode s n = codeWriter (getOperation s) n
 #+end_src
 
 #+RESULTS:
-: stdIn:1991.18-1991.31 Error: unbound variable or constructor: writeLogArith
+: val codeWriter = fn : line -> int -> string
+: val getOperation = fn : string -> line
+: val getLineWriteCode = fn : string -> int -> string
 
 * ☛ TODO read stream, write stream
 falta mexer em algumas coisas, passar o número de variáveis criadas
@@ -598,7 +593,7 @@ fun readfile (input, output) =
 #+end_src
 
 #+RESULTS:
-: stdIn:2011.45-2011.61 Error: unbound variable or constructor: getLineWriteCode
+: stdIn:2541.45-2541.61 Error: unbound variable or constructor: getLineWriteCode
 
 * ☛ TODO exit success
 adicionar a output com o path correto
@@ -612,6 +607,6 @@ val _ = OS.Process.exit(OS.Process.success)
 #+end_src
 
 #+RESULTS:
-: stdIn:2002.21-2002.25 Error: unbound variable or constructor: args
-: stdIn:2018.9-2018.17 Error: unbound variable or constructor: readfile
+: stdIn:2532.21-2532.25 Error: unbound variable or constructor: args
+: stdIn:2548.9-2548.17 Error: unbound variable or constructor: readfile
 
