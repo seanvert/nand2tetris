@@ -322,10 +322,46 @@ fun writeLogArith operation n =
 	end
 
 fun writeFunctionOps fop =
+	let
+		val putDRegisterInTheStack = "@SP\n\
+		\A=M\n\
+		\M=D\n\
+		\@SP\n\
+		\M=M+1\n"
+
+		fun pushFunctionStack seg =
+			"@" ^ seg ^ "\n\
+			\D=M\n" ^ putDRegisterInTheStack 
+										 
+		fun initializeArgs n = writeStackMemOp (Push, Constant, Index 0) ^ 
+							   (writeStackMemOp (Pop, Local, Index n))
+
+		val concatenateList = foldr (fn (x, y) => x ^ y) ""
+		(* TODO 		    *)
+		val returnAddress = "placeholder"
+
+		val functionStack = [returnAddress, "LCL", "ARG", "THIS", "THAT"]
+	in
 	case fop of
-		Declaration (Name fname, Localargs k) => "(" ^ fname ^ ")\n"
-	  | Call (Name fname, Localargs k) => ""
+		Declaration (Name fname, Localargs k) => "(" ^ fname ^ ")\n\
+		\" ^ concatenateList (List.tabulate (k, initializeArgs))
+	  | Call (Name fname, Localargs k) => concatenateList (map pushFunctionStack functionStack) ^ 
+	  "@SP\n\
+	  \D=M\n\
+	  \@5\n\
+	  \D=D-A\n\
+	  \@" ^ Int.toString k ^ "\n\
+	  \D=D-A\n\
+	  \@ARG\n\
+	  \M=D\n\
+	  \@SP\n\
+	  \D=M\n\
+	  \@LCL\n\
+	  \M=D\n\
+	  \0;JMP\n\
+	  \(" ^ returnAddress ^ ")\n"
 	  | Return => ""
+	end
 
 fun codeWriter line n =
 	case line of
