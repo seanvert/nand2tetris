@@ -129,7 +129,13 @@ val filename = hd (String.tokens (fn x => x = #".") filenameExtension)
 #+end_src
 
 #+RESULTS:
-: val filename = "asd" : string
+: [autoloading]
+: [autoloading done]
+: stdIn:122.5-125.25 Warning: match nonexhaustive
+:           p :: ph => ...
+:   
+: 
+: uncaught exception Empty
 
 * read functions string -> string list
 
@@ -231,7 +237,7 @@ fun memOperations (q, w, e) =
 #+end_src
 
 #+RESULTS:
-: stdIn:2302.7-2302.32 Warning: binding not exhaustive
+: stdIn:190.7-190.32 Warning: binding not exhaustive
 :           SOME i = ...
 : val segmentIdentifier = fn : string -> segment
 : val pushOrPop = fn : string -> stackop option
@@ -279,9 +285,9 @@ fun functionReturn str =
 #+end_src
 
 #+RESULTS:
-: stdIn:2324.7-2324.39 Warning: binding not exhaustive
+: stdIn:212.7-212.39 Warning: binding not exhaustive
 :           SOME args = ...
-: stdIn:2323.7-2323.46 Warning: binding not exhaustive
+: stdIn:211.7-211.46 Warning: binding not exhaustive
 :           SOME fname = ...
 : val functionOperations = fn : string -> string -> string -> functionOp
 : val functionReturn = fn : string -> functionOp option
@@ -308,7 +314,7 @@ val getOperationsFromTokens = operation
 #+end_src
 
 #+RESULTS:
-: stdIn:2339.16-2341.51 Warning: match nonexhaustive
+: stdIn:227.16-229.51 Warning: match nonexhaustive
 :           SOME Return => ...
 :           NONE => ...
 :   
@@ -507,7 +513,11 @@ fun writeLogArith operation n =
 #+end_src
 
 #+RESULTS:
-: val writeLogArith = fn : arithmlogi -> int -> string
+: stdIn:372.9-372.17 Error: unbound variable or constructor: filename
+: stdIn:368.9-368.17 Error: unbound variable or constructor: filename
+: stdIn:366.9-366.17 Error: unbound variable or constructor: filename
+: stdIn:362.9-362.17 Error: unbound variable or constructor: filename
+: stdIn:360.9-360.17 Error: unbound variable or constructor: filename
 
 ** ⚑ ESPERANDO write function operations fn : functionOp -> string
 depende das funções de memória  writeStackMemOp
@@ -535,7 +545,20 @@ fun writeFunctionOps fop =
 		(* TODO 		    *)
 		val returnAddress = "placeholder"
 
+		fun restoreStack (seg, k) = "@FRAME\n\
+		\D=M\n\
+		\@" ^ k ^ "\n\
+		\D=D-A\n\
+		\@" ^ seg ^ "\n\
+		\M=D\n"
+
 		val functionStack = [returnAddress, "LCL", "ARG", "THIS", "THAT"]
+
+		val restoreSegments = rev (tl functionStack)
+
+		val restoreOffset = ["1", "2", "3", "4"]
+
+		val restorePairs = ListPair.zip (restoreSegments, restoreOffset)
 	in
 	case fop of
 		Declaration (Name fname, Localargs k) => "(" ^ fname ^ ")\n\
@@ -555,7 +578,19 @@ fun writeFunctionOps fop =
 	  \M=D\n\
 	  \0;JMP\n\
 	  \(" ^ returnAddress ^ ")\n"
-	  | Return => ""
+	  | Return => "@LCL\n\
+	  \D=A\n\
+	  \@FRAME\n\
+	  \M=D\n\
+	  \@5\n\
+	  \D=D-A\n\
+	  \@RET\n\
+	  \M=D\n" ^ "argpop TODO" ^ "@ARG\n\
+	  \D=M+1\n\
+	  \@SP\n\
+	  \M=D\n" ^ concatenateList (map restoreStack restorePairs)  ^
+	  "@RET\n\
+	  \0;JMP\n"
 	end
 
 #+end_src
@@ -583,9 +618,7 @@ fun getLineWriteCode s n = codeWriter (getOperation s) n
 #+end_src
 
 #+RESULTS:
-: val codeWriter = fn : line -> int -> string
-: val getOperation = fn : string -> line
-: val getLineWriteCode = fn : string -> int -> string
+: stdIn:455.29-455.45 Error: unbound variable or constructor: writeFunctionOps
 
 * ☛ TODO read stream, write stream
 falta mexer em algumas coisas, passar o número de variáveis criadas
@@ -612,7 +645,8 @@ fun readfile (input, output) =
 #+end_src
 
 #+RESULTS:
-: stdIn:2541.45-2541.61 Error: unbound variable or constructor: getLineWriteCode
+: [autoloading]
+: [autoloading done]
 
 * ☛ TODO exit success
 adicionar a output com o path correto
@@ -626,6 +660,6 @@ val _ = OS.Process.exit(OS.Process.success)
 #+end_src
 
 #+RESULTS:
-: stdIn:2532.21-2532.25 Error: unbound variable or constructor: args
-: stdIn:2548.9-2548.17 Error: unbound variable or constructor: readfile
+: stdIn:463.21-463.25 Error: unbound variable or constructor: args
+: stdIn:479.9-479.17 Error: unbound variable or constructor: readfile
 
