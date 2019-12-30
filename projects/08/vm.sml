@@ -329,6 +329,10 @@ fun writeFunctionOps fop =
 		\@SP\n\
 		\M=M+1\n"
 
+		val stackValueIntoDRegister = "@SP\n\
+		\AM=M-1\n\
+		\D=M\n"
+
 		fun pushFunctionStack seg =
 			"@" ^ seg ^ "\n\
 			\D=M\n" ^ putDRegisterInTheStack 
@@ -340,7 +344,20 @@ fun writeFunctionOps fop =
 		(* TODO 		    *)
 		val returnAddress = "placeholder"
 
+		fun restoreStack (seg, k) = "@FRAME\n\
+		\D=M\n\
+		\@" ^ k ^ "\n\
+		\D=D-A\n\
+		\@" ^ seg ^ "\n\
+		\M=D\n"
+
 		val functionStack = [returnAddress, "LCL", "ARG", "THIS", "THAT"]
+
+		val restoreSegments = rev (tl functionStack)
+
+		val restoreOffset = ["1", "2", "3", "4"]
+
+		val restorePairs = ListPair.zip (restoreSegments, restoreOffset)
 	in
 	case fop of
 		Declaration (Name fname, Localargs k) => "(" ^ fname ^ ")\n\
@@ -360,7 +377,20 @@ fun writeFunctionOps fop =
 	  \M=D\n\
 	  \0;JMP\n\
 	  \(" ^ returnAddress ^ ")\n"
-	  | Return => ""
+	  | Return => "@LCL\n\
+	  \D=A\n\
+	  \@FRAME\n\
+	  \M=D\n\
+	  \@5\n\
+	  \D=D-A\n\
+	  \@RET\n\
+	  \M=D\n" ^ stackValueIntoDRegister ^ "@ARG\n\
+	  \M=D\n" ^ "@ARG\n\
+	  \D=M+1\n\
+	  \@SP\n\
+	  \M=D\n" ^ concatenateList (map restoreStack restorePairs)  ^
+	  "@RET\n\
+	  \0;JMP\n"
 	end
 
 fun codeWriter line n =

@@ -521,9 +521,7 @@ fun writeLogArith operation n =
 
 ** ⚑ ESPERANDO write function operations fn : functionOp -> string
 depende das funções de memória  writeStackMemOp
-- escrever o assembly
 - arrumar o return address
-
 
 #+begin_src sml
 fun writeFunctionOps fop =
@@ -533,6 +531,10 @@ fun writeFunctionOps fop =
 		\M=D\n\
 		\@SP\n\
 		\M=M+1\n"
+
+		val stackValueIntoDRegister = "@SP\n\
+		\AM=M-1\n\
+		\D=M\n"
 
 		fun pushFunctionStack seg =
 			"@" ^ seg ^ "\n\
@@ -585,7 +587,8 @@ fun writeFunctionOps fop =
 	  \@5\n\
 	  \D=D-A\n\
 	  \@RET\n\
-	  \M=D\n" ^ "argpop TODO" ^ "@ARG\n\
+	  \M=D\n" ^ stackValueIntoDRegister ^ "@ARG\n\
+	  \M=D\n" ^ "@ARG\n\
 	  \D=M+1\n\
 	  \@SP\n\
 	  \M=D\n" ^ concatenateList (map restoreStack restorePairs)  ^
