@@ -110,8 +110,8 @@ datatype line = Operation of arithmlogi
 :   | Operation of arithmlogi
 
 * ⚑ ESPERANDO arguments
-match nonexhaustive na função getFilename
-também precisa mudar a ordem pra ficar melhor com o final
+- também precisa mudar a ordem pra ficar melhor com o final
+- match nonexhaustive na função getFilename
 
 #+begin_src sml
 val args = CommandLine.arguments()
@@ -170,10 +170,7 @@ val remCommGetTokens = getTokens o removeComments
 : val remCommGetTokens = fn : string -> string list
 
 * functions string list -> line
-
-** auxiliary functions
-
-*** logical/arithmetic identifier
+** logical/arithmetic identifier  fn : string -> arithmlogi
 
 #+begin_src sml
 fun logicalIdentifier s =
@@ -194,7 +191,7 @@ fun logicalIdentifier s =
 #+RESULTS:
 : val logicalIdentifier = fn : string -> arithmlogi
 
-*** ☛ TODO memory identifier
+** ☛ TODO memory identifier
 colocar um erro e uma função auxiliar para mexer com esses
 Int.fromString no programa inteiro. Acho que uma função com tipos de
 erro diferente dependendo de onde foi passada a string seria uma boa.
@@ -237,14 +234,14 @@ fun memOperations (q, w, e) =
 #+end_src
 
 #+RESULTS:
-: stdIn:190.7-190.32 Warning: binding not exhaustive
+: stdIn:1189.7-1189.32 Warning: binding not exhaustive
 :           SOME i = ...
 : val segmentIdentifier = fn : string -> segment
 : val pushOrPop = fn : string -> stackop option
 : val memOperations = fn
 :   : stackop * string * string -> stackop * segment * index
 
-*** label flow identifier
+** label flow identifier  fn : string -> string -> labelFlow * labelString
 
 #+begin_src sml
 fun readLabelFlow p1 p2 =
@@ -262,7 +259,7 @@ fun readLabelFlow p1 p2 =
 #+RESULTS:
 : val readLabelFlow = fn : string -> string -> labelFlow * labelString
 
-*** ☛ TODO function operations identifier
+** ☛ TODO function operations identifier
 not exhaustive
 
 #+begin_src sml
@@ -285,9 +282,9 @@ fun functionReturn str =
 #+end_src
 
 #+RESULTS:
-: stdIn:212.7-212.39 Warning: binding not exhaustive
+: stdIn:1152.7-1152.39 Warning: binding not exhaustive
 :           SOME args = ...
-: stdIn:211.7-211.46 Warning: binding not exhaustive
+: stdIn:1151.7-1151.46 Warning: binding not exhaustive
 :           SOME fname = ...
 : val functionOperations = fn : string -> string -> string -> functionOp
 : val functionReturn = fn : string -> functionOp option
@@ -348,7 +345,7 @@ fun writeLabelops (label, LabelName str) =
 
 ** write mem operations
 
-*** ✓ PRONTO write push
+*** ✓ PRONTO write push  fn : segment -> index -> string
 #+begin_src sml
 fun writePush seg (Index i)  =
 	let
@@ -391,7 +388,7 @@ fun writePush seg (Index i)  =
 #+RESULTS:
 : val writePush = fn : segment -> index -> string
 
-*** ✓ PRONTO write pop
+*** ✓ PRONTO write pop  fn : segment -> index -> string
 
 #+begin_src sml
 fun writePop seg (Index i) =
@@ -438,7 +435,7 @@ fun writePop seg (Index i) =
 #+RESULTS:
 : val writePop = fn : segment -> index -> string
 
-*** main function
+*** main function  fn : stackop * segment * index -> string
 
 #+begin_src sml
 fun writeStackMemOp s =
@@ -450,7 +447,7 @@ fun writeStackMemOp s =
 #+RESULTS:
 : val writeStackMemOp = fn : stackop * segment * index -> string
 
-** write arithmetic and logical operations
+** write arithmetic and logical operations 
 
 #+begin_src sml
  (* n é o número de linhas no código										  *)
@@ -565,7 +562,8 @@ fun writeFunctionOps fop =
 	case fop of
 		Declaration (Name fname, Localargs k) => "(" ^ fname ^ ")\n\
 		\" ^ concatenateList (List.tabulate (k, initializeArgs))
-	  | Call (Name fname, Localargs k) => concatenateList (map pushFunctionStack functionStack) ^ 
+	  | Call (Name fname, Localargs k) => concatenateList
+											 (map pushFunctionStack functionStack) ^ 
 	  "@SP\n\
 	  \D=M\n\
 	  \@5\n\
@@ -602,9 +600,8 @@ fun writeFunctionOps fop =
 : val writeFunctionOps = fn : functionOp -> string
 
 ** ⚑ ESPERANDO main function
-function calling protocol precisa implemenar
-
 também está faltando implementar o contador de variáveis
+
 #+begin_src sml
 fun codeWriter line n =
 	case line of
@@ -621,7 +618,7 @@ fun getLineWriteCode s n = codeWriter (getOperation s) n
 #+end_src
 
 #+RESULTS:
-: stdIn:455.29-455.45 Error: unbound variable or constructor: writeFunctionOps
+: stdIn:1124.18-1124.31 Error: unbound variable or constructor: writeLogArith
 
 * ☛ TODO read stream, write stream
 falta mexer em algumas coisas, passar o número de variáveis criadas
@@ -648,8 +645,7 @@ fun readfile (input, output) =
 #+end_src
 
 #+RESULTS:
-: [autoloading]
-: [autoloading done]
+: stdIn:1144.45-1144.61 Error: unbound variable or constructor: getLineWriteCode
 
 * ☛ TODO exit success
 adicionar a output com o path correto

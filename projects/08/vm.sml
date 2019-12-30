@@ -362,7 +362,8 @@ fun writeFunctionOps fop =
 	case fop of
 		Declaration (Name fname, Localargs k) => "(" ^ fname ^ ")\n\
 		\" ^ concatenateList (List.tabulate (k, initializeArgs))
-	  | Call (Name fname, Localargs k) => concatenateList (map pushFunctionStack functionStack) ^ 
+	  | Call (Name fname, Localargs k) => concatenateList
+											 (map pushFunctionStack functionStack) ^ 
 	  "@SP\n\
 	  \D=M\n\
 	  \@5\n\
