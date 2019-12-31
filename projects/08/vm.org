@@ -110,6 +110,7 @@ datatype line = Operation of arithmlogi
 :   | Operation of arithmlogi
 
 * ⚑ ESPERANDO arguments
+- falta colocar um jeito de lidar com pastas
 - também precisa mudar a ordem pra ficar melhor com o final
 - match nonexhaustive na função getFilename
 
@@ -321,6 +322,10 @@ val getOperationsFromTokens = operation
 * write : line -> string
 
 ** ⚑ ESPERANDO init 
+- call sys.init
+#+begin_src sml
+
+#+end_src
 
 ** ☛ TODO write label operations fn : labelFlow * labelString -> string
 esses nomes dos tipos das labels ficaram bem confusos, depois acho que
@@ -516,9 +521,10 @@ fun writeLogArith operation n =
 : stdIn:362.9-362.17 Error: unbound variable or constructor: filename
 : stdIn:360.9-360.17 Error: unbound variable or constructor: filename
 
-** ⚑ ESPERANDO write function operations fn : functionOp -> string
+** ☛ TODO write function operations fn : functionOp -> string
 depende das funções de memória  writeStackMemOp
-- arrumar o return address
+- consertar o nome das variáveis
+- diminuir um pouco o tamanho dessa função
 
 #+begin_src sml
 fun writeFunctionOps fop =
