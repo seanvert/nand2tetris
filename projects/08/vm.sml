@@ -335,10 +335,10 @@ fun writeFunctionOps fop =
 
 		fun pushFunctionStack seg =
 			"@" ^ seg ^ "\n\
-			\D=M\n" ^ putDRegisterInTheStack 
+			\D=A\n" ^ putDRegisterInTheStack 
 										 
-		fun initializeArgs n = writeStackMemOp (Push, Constant, Index 0) ^ 
-							   (writeStackMemOp (Pop, Local, Index n))
+		fun initializeArgs n = writeStackMemOp (Push, Constant, Index 0)
+							   (* (writeStackMemOp (Pop, Local, Index n)) *)
 
 		val concatenateList = foldr (fn (x, y) => x ^ y) ""
 		(* TODO 		    *)
@@ -347,7 +347,8 @@ fun writeFunctionOps fop =
 		fun restoreStack (seg, k) = "@FRAME\n\
 		\D=M\n\
 		\@" ^ k ^ "\n\
-		\D=D-A\n\
+		\A=D-A\n\
+		\D=M\n\
 		\@" ^ seg ^ "\n\
 		\M=D\n"
 
@@ -376,21 +377,27 @@ fun writeFunctionOps fop =
 	  \D=M\n\
 	  \@LCL\n\
 	  \M=D\n\
+	  \@" ^ fname ^ "\n\
 	  \0;JMP\n\
 	  \(" ^ returnAddress ^ ")\n"
 	  | Return => "@LCL\n\
-	  \D=A\n\
+	  \D=M\n\
 	  \@FRAME\n\
 	  \M=D\n\
 	  \@5\n\
-	  \D=D-A\n\
+	  \A=D-A\n\
+	  \D=M\n\
 	  \@RET\n\
 	  \M=D\n" ^ stackValueIntoDRegister ^ "@ARG\n\
-	  \M=D\n" ^ "@ARG\n\
+	  \A=M\n\
+	  \M=D\n\
+	  \@ARG\n\
+	  \D=M\n\
 	  \D=M+1\n\
 	  \@SP\n\
 	  \M=D\n" ^ concatenateList (map restoreStack restorePairs)  ^
 	  "@RET\n\
+	  \A=M\n\
 	  \0;JMP\n"
 	end
 
