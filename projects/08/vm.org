@@ -112,31 +112,50 @@ datatype line = Operation of arithmlogi
 * ⚑ ESPERANDO arguments
 - falta colocar um jeito de lidar com pastas
 - também precisa mudar a ordem pra ficar melhor com o final
-- match nonexhaustive na função getFilename
+
+OS.Path.fromString "/home/sean/nand2tetris/vm.asd";
+
+OS.FileSys.readDir (OS.FileSys.openDir ".");
+
+val dirstream = OS.FileSys.openDir "/home/sean/nand2tetris/projects/08/FunctionCalls/SimpleFunction/";
 
 #+begin_src sml
-val args = CommandLine.arguments()
-val parsedDirPathArgs = String.tokens (fn x => x = #"/") (hd args)
+(* parte que vai pegar o path *)
+(* val args = CommandLine.arguments() *)
+val args = ["/home/sean/nand2tetris/projects/08/FunctionCalls/SimpleFunction/SimpleFunction.vm"]
+val vmdir = ["/home/sean/nand2tetris/projects/08/FunctionCalls/FibonacciElement/"]
+val isDir = OS.FileSys.isDir (hd args)
 
-fun getFilename (p::ph) =
-	case ph of
-		[] => p
-	  | _ => getFilename ph
+fun getAllVmFiles path =
+	let
+		val dirStream = OS.FileSys.openDir path
+		fun aux dstream list = 
+			case OS.FileSys.readDir dstream of
+				NONE => list
+			  | SOME f => (case #ext (OS.Path.splitBaseExt f) of
+							  NONE => aux dstream list
+							| SOME "vm" => aux dstream (f::list)
+							| SOME _ => aux dstream list)
+	in
+		aux dirStream []
+	end
 
-val filenameExtension = getFilename parsedDirPathArgs
-val filename = hd (String.tokens (fn x => x = #".") filenameExtension)
+val {dir, file} = OS.Path.splitDirFile (hd args)
+
+(* colocar alguma coisa aqui pra ver se é um diretório *)
+val filename = hd (String.tokens (fn x => x = #".") file)
 (* placeholder só pra teste  *)
 (* val filename = "asd" *)
 #+end_src
 
 #+RESULTS:
-: [autoloading]
-: [autoloading done]
-: stdIn:122.5-125.25 Warning: match nonexhaustive
-:           p :: ph => ...
-:   
-: 
-: uncaught exception Empty
+: val args =
+:   ["/home/sean/nand2tetris/projects/08/FunctionCalls/SimpleFunction/Simple#"]
+:   : string list
+: val dir = "/home/sean/nand2tetris/projects/08/FunctionCalls/SimpleFunction"
+:   : string
+: val file = "SimpleFunction.vm" : string
+: val filename = "SimpleFunction" : string
 
 * read functions string -> string list
 
