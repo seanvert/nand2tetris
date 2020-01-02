@@ -110,21 +110,14 @@ datatype line = Operation of arithmlogi
 :   | Operation of arithmlogi
 
 * ⚑ ESPERANDO arguments
-- falta colocar um jeito de lidar com pastas
 - também precisa mudar a ordem pra ficar melhor com o final
-
 OS.Path.fromString "/home/sean/nand2tetris/vm.asd";
-
-OS.FileSys.readDir (OS.FileSys.openDir ".");
-
-val dirstream = OS.FileSys.openDir "/home/sean/nand2tetris/projects/08/FunctionCalls/SimpleFunction/";
 
 #+begin_src sml
 (* parte que vai pegar o path *)
 (* val args = CommandLine.arguments() *)
 val args = ["/home/sean/nand2tetris/projects/08/FunctionCalls/SimpleFunction/SimpleFunction.vm"]
 val vmdir = ["/home/sean/nand2tetris/projects/08/FunctionCalls/FibonacciElement/"]
-val isDir = OS.FileSys.isDir (hd args)
 
 fun getAllVmFiles path =
 	let
@@ -140,22 +133,45 @@ fun getAllVmFiles path =
 		aux dirStream []
 	end
 
+fun openFiles path =
+	let
+		val isDir = OS.FileSys.isDir (hd args)
+	in
+		case isDir of
+			true => getAllVmFiles path
+		  | false => (let
+						 val {dir, file} = OS.Path.splitDirFile (hd args)
+					 in
+						 [file]
+					 end)
+	end
+
 val {dir, file} = OS.Path.splitDirFile (hd args)
 
 (* colocar alguma coisa aqui pra ver se é um diretório *)
 val filename = hd (String.tokens (fn x => x = #".") file)
-(* placeholder só pra teste  *)
-(* val filename = "asd" *)
+
 #+end_src
 
 #+RESULTS:
-: val args =
-:   ["/home/sean/nand2tetris/projects/08/FunctionCalls/SimpleFunction/Simple#"]
-:   : string list
-: val dir = "/home/sean/nand2tetris/projects/08/FunctionCalls/SimpleFunction"
-:   : string
-: val file = "SimpleFunction.vm" : string
-: val filename = "SimpleFunction" : string
+#+begin_example
+[autoloading]
+[library $SMLNJ-BASIS/basis.cm is stable]
+[library $SMLNJ-BASIS/(basis.cm):basis-common.cm is stable]
+[autoloading done]
+val args =
+  ["/home/sean/nand2tetris/projects/08/FunctionCalls/SimpleFunction/Simple#"]
+  : string list
+val vmdir =
+  ["/home/sean/nand2tetris/projects/08/FunctionCalls/FibonacciElement/"]
+  : string list
+val getAllVmFiles = fn : string -> string list
+val openFiles = fn : string -> string list
+val dir = "/home/sean/nand2tetris/projects/08/FunctionCalls/SimpleFunction"
+  : string
+val file = "SimpleFunction.vm" : string
+val filename = "SimpleFunction" : string
+#+end_example
 
 * read functions string -> string list
 
@@ -254,7 +270,7 @@ fun memOperations (q, w, e) =
 #+end_src
 
 #+RESULTS:
-: stdIn:1189.7-1189.32 Warning: binding not exhaustive
+: stdIn:149.7-149.32 Warning: binding not exhaustive
 :           SOME i = ...
 : val segmentIdentifier = fn : string -> segment
 : val pushOrPop = fn : string -> stackop option
@@ -265,15 +281,12 @@ fun memOperations (q, w, e) =
 
 #+begin_src sml
 fun readLabelFlow p1 p2 =
-	let
-		val _ = print ("LabelFlow: " ^ p1 ^ p2 ^ "\n")
-	in
 	case p1 of
 		"label" => (Label, LabelName p2)
 	  | "goto" => (Goto, LabelName p2)
 	  | "if-goto" => (Ifgoto, LabelName p2)
 	  | _ => raise labelError
-	end
+
 #+end_src
 
 #+RESULTS:
@@ -302,9 +315,9 @@ fun functionReturn str =
 #+end_src
 
 #+RESULTS:
-: stdIn:1152.7-1152.39 Warning: binding not exhaustive
+: stdIn:167.7-167.39 Warning: binding not exhaustive
 :           SOME args = ...
-: stdIn:1151.7-1151.46 Warning: binding not exhaustive
+: stdIn:166.7-166.46 Warning: binding not exhaustive
 :           SOME fname = ...
 : val functionOperations = fn : string -> string -> string -> functionOp
 : val functionReturn = fn : string -> functionOp option
@@ -331,7 +344,7 @@ val getOperationsFromTokens = operation
 #+end_src
 
 #+RESULTS:
-: stdIn:227.16-229.51 Warning: match nonexhaustive
+: stdIn:182.16-184.51 Warning: match nonexhaustive
 :           SOME Return => ...
 :           NONE => ...
 :   
@@ -345,6 +358,9 @@ val getOperationsFromTokens = operation
 #+begin_src sml
 
 #+end_src
+
+#+RESULTS:
+: val it = "stdIn" : string
 
 ** ☛ TODO write label operations fn : labelFlow * labelString -> string
 esses nomes dos tipos das labels ficaram bem confusos, depois acho que
@@ -369,7 +385,7 @@ fun writeLabelops (label, LabelName str) =
 
 ** write mem operations
 
-*** ✓ PRONTO write push  fn : segment -> index -> string
+*** write push  fn : segment -> index -> string
 #+begin_src sml
 fun writePush seg (Index i)  =
 	let
@@ -412,7 +428,7 @@ fun writePush seg (Index i)  =
 #+RESULTS:
 : val writePush = fn : segment -> index -> string
 
-*** ✓ PRONTO write pop  fn : segment -> index -> string
+*** write pop  fn : segment -> index -> string
 
 #+begin_src sml
 fun writePop seg (Index i) =
@@ -534,11 +550,7 @@ fun writeLogArith operation n =
 #+end_src
 
 #+RESULTS:
-: stdIn:372.9-372.17 Error: unbound variable or constructor: filename
-: stdIn:368.9-368.17 Error: unbound variable or constructor: filename
-: stdIn:366.9-366.17 Error: unbound variable or constructor: filename
-: stdIn:362.9-362.17 Error: unbound variable or constructor: filename
-: stdIn:360.9-360.17 Error: unbound variable or constructor: filename
+: val writeLogArith = fn : arithmlogi -> int -> string
 
 ** ☛ TODO write function operations fn : functionOp -> string
 depende das funções de memória  writeStackMemOp
@@ -629,6 +641,8 @@ fun writeFunctionOps fop =
 #+end_src
 
 #+RESULTS:
+: [autoloading]
+: [autoloading done]
 : val writeFunctionOps = fn : functionOp -> string
 
 ** ⚑ ESPERANDO main function
@@ -650,11 +664,16 @@ fun getLineWriteCode s n = codeWriter (getOperation s) n
 #+end_src
 
 #+RESULTS:
-: stdIn:1124.18-1124.31 Error: unbound variable or constructor: writeLogArith
+: val codeWriter = fn : line -> int -> string
+: val getOperation = fn : string -> line
+: val getLineWriteCode = fn : string -> int -> string
 
-* ☛ TODO read stream, write stream
-falta mexer em algumas coisas, passar o número de variáveis criadas
-até então ao invés do número de linhas
+* ⚑ ESPERANDO read stream, write stream
+- preciso colocar alguma coisa aqui pra mexer com vários arquivos e
+  soltar um só. 
+- o esquema que está ali em cima é uma lista de arquivos .vm
+- falta mexer em algumas coisas, passar o número de variáveis criadas
+  até então ao invés do número de linhas
 
 #+begin_src sml
 fun readfile (input, output) =
@@ -663,13 +682,9 @@ fun readfile (input, output) =
 		val outstream = TextIO.openOut output
 		val readline = TextIO.inputLine instream
 		fun aux readline n =
-			let
-				(* val _ = print (Int.toString n) *)
-			in
 			case readline of
 				NONE => (TextIO.closeIn instream; TextIO.closeOut outstream)
 			  | SOME s => (TextIO.output(outstream, (getLineWriteCode s n)); aux (TextIO.inputLine instream) (n + 1))
-			end
 	in
 		aux readline 0
 	end
@@ -677,7 +692,47 @@ fun readfile (input, output) =
 #+end_src
 
 #+RESULTS:
-: stdIn:1144.45-1144.61 Error: unbound variable or constructor: getLineWriteCode
+: [autoloading]
+: [autoloading done]
+: val readfile = fn : string * string -> unit
+#+begin_src sml
+(* val outstream = TextIO.openOut output *)
+
+fun readFileList (x::xs) outstream n =
+	let
+
+	in
+	case xs of
+		[] => (let
+			  val instream = TextIO.openIn x
+			  val readline = TextIO.inputLine instream
+			  fun aux readline n =
+					  case readline of
+						  NONE => (TextIO.closeIn instream; TextIO.closeOut outstream)
+						| SOME s => (TextIO.output(outstream, (getLineWriteCode s n)); aux (TextIO.inputLine instream) (n + 1))
+			  in
+				  aux readline n
+			  end)
+	  | _ => (let
+			 val instream = TextIO.openIn x
+			 val readline = TextIO.inputLine instream
+			 fun aux readline n =
+				 case readline of
+					 NONE => (TextIO.closeIn instream; readFileList xs outstream n)
+				   | SOME s => (TextIO.output(outstream, (getLineWriteCode s n)); aux (TextIO.inputLine instream) (n + 1))
+			in
+				aux readline n
+			end)
+	end
+
+#+end_src
+
+#+RESULTS:
+: stdIn:453.5-478.5 Warning: match nonexhaustive
+:           (x :: xs,outstream,n) => ...
+:   
+: val readFileList = fn : string list -> TextIO.outstream -> int -> unit
+
 
 * ☛ TODO exit success
 adicionar a output com o path correto
@@ -687,10 +742,11 @@ mexer na primeira função pra ficar melhor
 val filePath = hd (String.tokens (fn x => x = #".") (hd args))
 (* val _ print hd parsedDirPathArgs *)
 val _ = readfile ((hd args), filePath ^ ".asm")
-val _ = OS.Process.exit(OS.Process.success)
+(* val _ = OS.Process.exit(OS.Process.success) *)
 #+end_src
 
 #+RESULTS:
-: stdIn:463.21-463.25 Error: unbound variable or constructor: args
-: stdIn:479.9-479.17 Error: unbound variable or constructor: readfile
+: locallocalargumentargumentval filePath =
+:   "/home/sean/nand2tetris/projects/08/FunctionCalls/SimpleFunction/Simple#"
+:   : string
 
