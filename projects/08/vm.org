@@ -669,8 +669,6 @@ fun getLineWriteCode s n = codeWriter (getOperation s) n
 : val getLineWriteCode = fn : string -> int -> string
 
 * ⚑ ESPERANDO read stream, write stream
-- preciso colocar alguma coisa aqui pra mexer com vários arquivos e
-  soltar um só. 
 - o esquema que está ali em cima é uma lista de arquivos .vm
 - falta mexer em algumas coisas, passar o número de variáveis criadas
   até então ao invés do número de linhas
@@ -697,41 +695,29 @@ fun readfile (input, output) =
 : val readfile = fn : string * string -> unit
 #+begin_src sml
 (* val outstream = TextIO.openOut output *)
-
-fun readFileList (x::xs) outstream n =
+fun readFileList (x::xs) n outstream =	
 	let
-
+		val part = readFileList xs n
+		val instream = TextIO.openIn x
+		val readline = TextIO.inputLine instream
+		fun aux readline n function =
+			case readline of
+				NONE => (TextIO.closeIn instream; function outstream)
+			  | SOME s => (TextIO.output(outstream, (getLineWriteCode s n));
+						 aux (TextIO.inputLine instream) (n + 1) (fn s => ()))
 	in
 	case xs of
-		[] => (let
-			  val instream = TextIO.openIn x
-			  val readline = TextIO.inputLine instream
-			  fun aux readline n =
-					  case readline of
-						  NONE => (TextIO.closeIn instream; TextIO.closeOut outstream)
-						| SOME s => (TextIO.output(outstream, (getLineWriteCode s n)); aux (TextIO.inputLine instream) (n + 1))
-			  in
-				  aux readline n
-			  end)
-	  | _ => (let
-			 val instream = TextIO.openIn x
-			 val readline = TextIO.inputLine instream
-			 fun aux readline n =
-				 case readline of
-					 NONE => (TextIO.closeIn instream; readFileList xs outstream n)
-				   | SOME s => (TextIO.output(outstream, (getLineWriteCode s n)); aux (TextIO.inputLine instream) (n + 1))
-			in
-				aux readline n
-			end)
+		[] => (aux readline n TextIO.closeOut)
+	  | _ => (aux readline n part)
 	end
 
 #+end_src
 
 #+RESULTS:
-: stdIn:453.5-478.5 Warning: match nonexhaustive
-:           (x :: xs,outstream,n) => ...
+: stdIn:963.5-977.5 Warning: match nonexhaustive
+:           (x :: xs,n,outstream) => ...
 :   
-: val readFileList = fn : string list -> TextIO.outstream -> int -> unit
+: val readFileList = fn : string list -> int -> TextIO.outstream -> unit
 
 
 * ☛ TODO exit success
