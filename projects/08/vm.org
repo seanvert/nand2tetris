@@ -13,7 +13,7 @@ exception functionOperationError
 
 #+RESULTS:
 
-* ☛ TODO datatypes: segment, arithmlogi, stackop, labelFlow, index, labelString, line
+* PRA FAZER datatypes: segment, arithmlogi, stackop, labelFlow, index, labelString, line
 - trocar esse nome das labels também seria uma boa
 
 ** memory datatypes
@@ -109,7 +109,7 @@ datatype line = Operation of arithmlogi
 :   | Memory of stackop * segment * index
 :   | Operation of arithmlogi
 
-* ⚑ ESPERANDO arguments
+* ESPERANDO arguments
 - também precisa mudar a ordem pra ficar melhor com o final
 OS.Path.fromString "/home/sean/nand2tetris/vm.asd";
 
@@ -155,10 +155,6 @@ val filename = hd (String.tokens (fn x => x = #".") file)
 
 #+RESULTS:
 #+begin_example
-[autoloading]
-[library $SMLNJ-BASIS/basis.cm is stable]
-[library $SMLNJ-BASIS/(basis.cm):basis-common.cm is stable]
-[autoloading done]
 val args =
   ["/home/sean/nand2tetris/projects/08/FunctionCalls/SimpleFunction/Simple#"]
   : string list
@@ -227,7 +223,7 @@ fun logicalIdentifier s =
 #+RESULTS:
 : val logicalIdentifier = fn : string -> arithmlogi
 
-** ☛ TODO memory identifier
+** PRA FAZER memory identifier
 colocar um erro e uma função auxiliar para mexer com esses
 Int.fromString no programa inteiro. Acho que uma função com tipos de
 erro diferente dependendo de onde foi passada a string seria uma boa.
@@ -270,7 +266,7 @@ fun memOperations (q, w, e) =
 #+end_src
 
 #+RESULTS:
-: stdIn:149.7-149.32 Warning: binding not exhaustive
+: stdIn:1127.7-1127.32 Warning: binding not exhaustive
 :           SOME i = ...
 : val segmentIdentifier = fn : string -> segment
 : val pushOrPop = fn : string -> stackop option
@@ -292,7 +288,7 @@ fun readLabelFlow p1 p2 =
 #+RESULTS:
 : val readLabelFlow = fn : string -> string -> labelFlow * labelString
 
-** ☛ TODO function operations identifier
+** PRA FAZER function operations identifier
 not exhaustive
 
 #+begin_src sml
@@ -315,14 +311,14 @@ fun functionReturn str =
 #+end_src
 
 #+RESULTS:
-: stdIn:167.7-167.39 Warning: binding not exhaustive
+: stdIn:1145.7-1145.39 Warning: binding not exhaustive
 :           SOME args = ...
-: stdIn:166.7-166.46 Warning: binding not exhaustive
+: stdIn:1144.7-1144.46 Warning: binding not exhaustive
 :           SOME fname = ...
 : val functionOperations = fn : string -> string -> string -> functionOp
 : val functionReturn = fn : string -> functionOp option
 
-** ☛ TODO main function
+** PRA FAZER main function
 falta dar um jeito nisso e melhorar a maneira que ele escolhe as
 operações. Por enquanto ele vai funcionar bem.
 
@@ -344,7 +340,7 @@ val getOperationsFromTokens = operation
 #+end_src
 
 #+RESULTS:
-: stdIn:182.16-184.51 Warning: match nonexhaustive
+: stdIn:1160.16-1162.51 Warning: match nonexhaustive
 :           SOME Return => ...
 :           NONE => ...
 :   
@@ -353,7 +349,7 @@ val getOperationsFromTokens = operation
 
 * write : line -> string
 
-** ⚑ ESPERANDO init 
+** ESPERANDO init 
 - call sys.init
 #+begin_src sml
 
@@ -362,7 +358,7 @@ val getOperationsFromTokens = operation
 #+RESULTS:
 : val it = "stdIn" : string
 
-** ☛ TODO write label operations fn : labelFlow * labelString -> string
+** PRA FAZER write label operations fn : labelFlow * labelString -> string
 esses nomes dos tipos das labels ficaram bem confusos, depois acho que
 seria bom trocar.
 
@@ -552,7 +548,7 @@ fun writeLogArith operation n =
 #+RESULTS:
 : val writeLogArith = fn : arithmlogi -> int -> string
 
-** ☛ TODO write function operations fn : functionOp -> string
+** PRA FAZER write function operations fn : functionOp -> string
 depende das funções de memória  writeStackMemOp
 - consertar o nome das variáveis
 - diminuir um pouco o tamanho dessa função
@@ -641,11 +637,9 @@ fun writeFunctionOps fop =
 #+end_src
 
 #+RESULTS:
-: [autoloading]
-: [autoloading done]
 : val writeFunctionOps = fn : functionOp -> string
 
-** ⚑ ESPERANDO main function
+** ESPERANDO main function
 também está faltando implementar o contador de variáveis
 
 #+begin_src sml
@@ -668,7 +662,7 @@ fun getLineWriteCode s n = codeWriter (getOperation s) n
 : val getOperation = fn : string -> line
 : val getLineWriteCode = fn : string -> int -> string
 
-* ⚑ ESPERANDO read stream, write stream
+* ESPERANDO read stream, write stream
 - o esquema que está ali em cima é uma lista de arquivos .vm
 - falta mexer em algumas coisas, passar o número de variáveis criadas
   até então ao invés do número de linhas
@@ -690,8 +684,6 @@ fun readfile (input, output) =
 #+end_src
 
 #+RESULTS:
-: [autoloading]
-: [autoloading done]
 : val readfile = fn : string * string -> unit
 #+begin_src sml
 (* val outstream = TextIO.openOut output *)
@@ -714,13 +706,10 @@ fun readFileList (x::xs) n outstream =
 #+end_src
 
 #+RESULTS:
-: stdIn:963.5-977.5 Warning: match nonexhaustive
-:           (x :: xs,n,outstream) => ...
-:   
-: val readFileList = fn : string list -> int -> TextIO.outstream -> unit
+: stdIn:1429.32-1429.38 Error: unbound variable or constructor: output
 
 
-* ☛ TODO exit success
+* PRA FAZER exit success
 adicionar a output com o path correto
 mexer na primeira função pra ficar melhor
 
