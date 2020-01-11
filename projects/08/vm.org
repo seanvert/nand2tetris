@@ -10,6 +10,8 @@ exception stackopError
 exception invalidPointerValue
 exception functionOperationError
 exception invalidFunctionReturn
+exception invalidFunctionName
+exception invalidFunctionArgs
 #+end_src
 
 #+RESULTS:
@@ -112,11 +114,13 @@ datatype line = Operation of arithmlogi
 :   | Operation of arithmlogi
 
 * ESPERANDO arguments
+- falta mexer na ordem dos arquivos pra ele compilar os comandos na
+  ordem certa. Não está priorizando o Sys.vm
 - falta organizar pra pegar primeiro o sys.vm
-- também precisa mudar a ordem pra ficar melhor com o final
-OS.Path.fromString "/home/sean/nand2tetris/vm.asd";
 - falta arrumar isso pra pegar o nome do arquivo que ele estiver
   mexendo na hora. Acho que está na parte de variáveis e de funções
+- também precisa mudar a ordem pra ficar melhor com o final
+  OS.Path.fromString "/home/sean/nand2tetris/vm.asd";
 
 #+begin_src sml
 (* parte que vai pegar o path *)
@@ -304,14 +308,28 @@ fun readLabelFlow p1 p2 =
 not exhaustive
 
 #+begin_src sml
+
+fun getFunctionName function =
+	case String.fromString function of
+		NONE => raise invalidFunctionName
+	  | SOME s => s
+
+fun getFunctionArgs args =
+	case Int.fromString args of
+		NONE => raise invalidFunctionArgs
+	  | SOME s => s
+
 fun functionOperations command function kargs =
 	let
-		val SOME fname = String.fromString function
-		val SOME args = Int.fromString kargs
+		val fname = getFunctionName function
+		val args = getFunctionArgs kargs
 	in
 	case command of
 		"call" => Call (Name fname, Localargs args)
-	  | "function" => Declaration (Name fname, Localargs args)
+	  | "function" => (case fname of
+						   (* TODO *)
+						  "Sys.init" =>  Declaration (Name fname, Localargs args)
+						| _ => Declaration (Name fname, Localargs args))
 	  | _ => raise functionOperationError
 	end
 
@@ -373,7 +391,12 @@ val _ = print "Read main functions loaded\n"
 ** ESPERANDO init 
 - call sys.init
 - colocar um código pra escrever o SP em 256
-#+begin_src sml
+@256
+D=A
+@SP
+M=D
+#+begin_src 
+
 
 #+end_src
 
@@ -688,6 +711,7 @@ val _ = print "Write main functions loaded\n"
 - o esquema que está ali em cima é uma lista de arquivos .vm
 - falta mexer em algumas coisas, passar o número de variáveis criadas
   até então ao invés do número de linhas
+- está carregando os arquivos corretamente, mas está bugando na saída.
 
 #+begin_src sml
 fun readfile (input, output) =

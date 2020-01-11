@@ -6,6 +6,8 @@ exception stackopError
 exception invalidPointerValue
 exception functionOperationError
 exception invalidFunctionReturn
+exception invalidFunctionName
+exception invalidFunctionArgs
 
 datatype stackop = Push
 				 | Pop
@@ -170,14 +172,27 @@ fun readLabelFlow p1 p2 =
 	  | "if-goto" => (Ifgoto, LabelName p2)
 	  | _ => raise labelError
 
+fun getFunctionName function =
+	case String.fromString function of
+		NONE => raise invalidFunctionName
+	  | SOME s => s
+
+fun getFunctionArgs args =
+	case Int.fromString args of
+		NONE => raise invalidFunctionArgs
+	  | SOME s => s
+
 fun functionOperations command function kargs =
 	let
-		val SOME fname = String.fromString function
-		val SOME args = Int.fromString kargs
+		val fname = getFunctionName function
+		val args = getFunctionArgs kargs
 	in
 	case command of
 		"call" => Call (Name fname, Localargs args)
-	  | "function" => Declaration (Name fname, Localargs args)
+	  | "function" => (case fname of
+						   (* TODO *)
+						  "Sys.init" =>  Declaration (Name fname, Localargs args)
+						| _ => Declaration (Name fname, Localargs args))
 	  | _ => raise functionOperationError
 	end
 
@@ -207,8 +222,6 @@ fun operation (p : string list) =
 
 val getOperationsFromTokens = operation
 val _ = print "Read main functions loaded\n"
-
-
 
 fun writeLabelops (label, LabelName str) =
 	case label of
