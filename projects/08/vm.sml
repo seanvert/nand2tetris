@@ -5,6 +5,7 @@ exception logicalError
 exception stackopError
 exception invalidPointerValue
 exception functionOperationError
+exception invalidFunctionReturn
 
 datatype stackop = Push
 				 | Pop
@@ -50,18 +51,52 @@ datatype line = Operation of arithmlogi
 			  | FunctionCommand of functionOp
 			  | Empty
 
+(* parte que vai pegar o path *)
 val args = CommandLine.arguments()
-val parsedDirPathArgs = String.tokens (fn x => x = #"/") (hd args)
+val path = hd args
+(* val args = ["/home/sean/nand2tetris/projects/08/FunctionCalls/SimpleFunction/SimpleFunction.vm"] *)
+(* val vmdir = ["/home/sean/nand2tetris/projects/08/FunctionCalls/FibonacciElement/"] *)
 
-fun getFilename (p::ph) =
-	case ph of
-		[] => p
-	  | _ => getFilename ph
+fun getAllVmFiles p =
+	let
+		val _ = print ("Path: " ^ p ^ "\n")
+		val dirStream = OS.FileSys.openDir p
+		fun aux dstream list = 
+			case OS.FileSys.readDir dstream of
+				NONE => list
+			  | SOME f => (case #ext (OS.Path.splitBaseExt f) of
+							  NONE => aux dstream list
+							| SOME "vm" => aux dstream (f::list)
+							| SOME _ => aux dstream list)
+	in
+		aux dirStream []
+	end
 
-val filenameExtension = getFilename parsedDirPathArgs
-val filename = hd (String.tokens (fn x => x = #".") filenameExtension)
-(* placeholder só pra teste  *)
-(* val filename = "asd" *)
+fun openFiles p =
+	let
+		val _ = print ("openFiles path: " ^ p ^ "\n")
+		val isDir = OS.FileSys.isDir p
+	in
+		case isDir of
+			true => getAllVmFiles p
+		  | false => (let
+						 val {dir, file} = OS.Path.splitDirFile p
+					 in
+						 [file]
+					 end)
+	end
+
+val fileList = openFiles path
+val _ = print "File List: \n"
+val _ = map (fn x => print (x ^ "\n")) fileList
+val _ = print "----------------"
+val {dir, file} = OS.Path.splitDirFile (hd args)
+
+val dirName =  hd (List.rev (String.tokens (fn x => x = #"/") dir))
+
+(* colocar alguma coisa aqui pra ver se é um diretório *)
+val filename = file
+val _ = print "Arguments loaded\n"
 
 fun removeComments (s : string) =
 	let
@@ -84,6 +119,7 @@ fun getTokens s =
 	  | SOME s  => String.tokens (fn x => x = #" ") s
 
 val remCommGetTokens = getTokens o removeComments
+val _ = print "get words\n"
 
 fun logicalIdentifier s =
 	case s of
@@ -131,15 +167,11 @@ fun memOperations (q, w, e) =
 	end
 
 fun readLabelFlow p1 p2 =
-	let
-		val _ = print ("LabelFlow: " ^ p1 ^ p2 ^ "\n")
-	in
 	case p1 of
 		"label" => (Label, LabelName p2)
 	  | "goto" => (Goto, LabelName p2)
 	  | "if-goto" => (Ifgoto, LabelName p2)
 	  | _ => raise labelError
-	end
 
 fun functionOperations command function kargs =
 	let
@@ -158,18 +190,26 @@ fun functionReturn str =
 	  | _ => NONE
 
 fun operation (p : string list) =
+	let
+		val _ = map (fn x => print ("Operation: " ^ x ^ "\n")) p
+	in
 	case p of
 		(p1::[]) => (case functionReturn p1 of
 						 SOME Return => FunctionCommand Return
-					   | NONE => Operation (logicalIdentifier p1))
+					   | NONE => Operation (logicalIdentifier p1)
+					   | _ => raise invalidFunctionReturn )
 	  | (p1::p2::p3::[]) => (case pushOrPop p1 of
 								SOME Push => Memory (memOperations (Push, p2, p3))
 							  | SOME Pop => Memory (memOperations (Pop, p2, p3))
 							  | NONE => FunctionCommand (functionOperations p1 p2 p3))
 	  | (p1::p2::[]) => Labelop (readLabelFlow p1 p2)
 	  | _ => Empty
+	end
 
 val getOperationsFromTokens = operation
+val _ = print "read main function\n"
+
+
 
 fun writeLabelops (label, LabelName str) =
 	case label of
@@ -412,6 +452,7 @@ fun codeWriter line n =
 val getOperation = operation o remCommGetTokens
 
 fun getLineWriteCode s n = codeWriter (getOperation s) n
+val _ = print "write main function\n"
 
 fun readfile (input, output) =
 	let
@@ -419,18 +460,34 @@ fun readfile (input, output) =
 		val outstream = TextIO.openOut output
 		val readline = TextIO.inputLine instream
 		fun aux readline n =
-			let
-				(* val _ = print (Int.toString n) *)
-			in
 			case readline of
 				NONE => (TextIO.closeIn instream; TextIO.closeOut outstream)
 			  | SOME s => (TextIO.output(outstream, (getLineWriteCode s n)); aux (TextIO.inputLine instream) (n + 1))
-			end
 	in
 		aux readline 0
 	end
 
-val filePath = hd (String.tokens (fn x => x = #".") (hd args))
+(* val outstream = TextIO.openOut output *)
+fun readFileList (x::xs) n outstream =	
+	let
+		val _ = print (dir ^ "/" ^ x)
+		val part = readFileList xs n
+		val instream = TextIO.openIn (dir ^ "/" ^ x)
+		val readline = TextIO.inputLine instream
+		fun aux readline n function =
+			case readline of
+				NONE => (TextIO.closeIn instream; function outstream)
+			  | SOME s => (TextIO.output(outstream, (getLineWriteCode s n));
+						 aux (TextIO.inputLine instream) (n + 1) (fn s => ()))
+	in
+	case xs of
+		[] => (aux readline n TextIO.closeOut)
+	  | _ => (aux readline n part)
+	end
+
+(* val filePath = hd (String.tokens (fn x => x = #".") (hd args)) *)
 (* val _ print hd parsedDirPathArgs *)
-val _ = readfile ((hd args), filePath ^ ".asm")
+(* val _ = readfile ((hd args), filePath ^ ".asm") *)
+val _ = print "exit sucess"
+val _ = readFileList fileList 0 (TextIO.openOut (dir ^ "/" ^ dirName ^ ".asm"))
 val _ = OS.Process.exit(OS.Process.success)

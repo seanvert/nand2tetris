@@ -9,6 +9,7 @@ exception logicalError
 exception stackopError
 exception invalidPointerValue
 exception functionOperationError
+exception invalidFunctionReturn
 #+end_src
 
 #+RESULTS:
@@ -57,6 +58,7 @@ datatype labelString = LabelName of string
 : datatype labelString = LabelName of string
 
 ** function datatypes
+
 #+begin_src sml
 datatype functionName = Name of string
 
@@ -110,18 +112,23 @@ datatype line = Operation of arithmlogi
 :   | Operation of arithmlogi
 
 * ESPERANDO arguments
+- falta organizar pra pegar primeiro o sys.vm
 - também precisa mudar a ordem pra ficar melhor com o final
 OS.Path.fromString "/home/sean/nand2tetris/vm.asd";
+- falta arrumar isso pra pegar o nome do arquivo que ele estiver
+  mexendo na hora. Acho que está na parte de variáveis e de funções
 
 #+begin_src sml
 (* parte que vai pegar o path *)
-(* val args = CommandLine.arguments() *)
-val args = ["/home/sean/nand2tetris/projects/08/FunctionCalls/SimpleFunction/SimpleFunction.vm"]
-val vmdir = ["/home/sean/nand2tetris/projects/08/FunctionCalls/FibonacciElement/"]
+val args = CommandLine.arguments()
+val path = hd args
+(* val args = ["/home/sean/nand2tetris/projects/08/FunctionCalls/SimpleFunction/SimpleFunction.vm"] *)
+(* val vmdir = ["/home/sean/nand2tetris/projects/08/FunctionCalls/FibonacciElement/"] *)
 
-fun getAllVmFiles path =
+fun getAllVmFiles p =
 	let
-		val dirStream = OS.FileSys.openDir path
+		val _ = print ("Path: " ^ p ^ "\n")
+		val dirStream = OS.FileSys.openDir p
 		fun aux dstream list = 
 			case OS.FileSys.readDir dstream of
 				NONE => list
@@ -133,23 +140,31 @@ fun getAllVmFiles path =
 		aux dirStream []
 	end
 
-fun openFiles path =
+fun openFiles p =
 	let
-		val isDir = OS.FileSys.isDir (hd args)
+		val _ = print ("openFiles path: " ^ p ^ "\n")
+		val isDir = OS.FileSys.isDir p
 	in
 		case isDir of
-			true => getAllVmFiles path
+			true => getAllVmFiles p
 		  | false => (let
-						 val {dir, file} = OS.Path.splitDirFile (hd args)
+						 val {dir, file} = OS.Path.splitDirFile p
 					 in
 						 [file]
 					 end)
 	end
 
+val fileList = openFiles path
+val _ = print "File List: \n"
+val _ = map (fn x => print (x ^ "\n")) fileList
+val _ = print "----------------\n"
 val {dir, file} = OS.Path.splitDirFile (hd args)
 
+val dirName =  hd (List.rev (String.tokens (fn x => x = #"/") dir))
+
 (* colocar alguma coisa aqui pra ver se é um diretório *)
-val filename = hd (String.tokens (fn x => x = #".") file)
+val filename = file
+val _ = print "Arguments loaded\n"
 
 #+end_src
 
@@ -193,7 +208,7 @@ fun getTokens s =
 	  | SOME s  => String.tokens (fn x => x = #" ") s
 
 val remCommGetTokens = getTokens o removeComments
-
+val _ = print "get words\n"
 #+end_src
 
 #+RESULTS:
@@ -324,19 +339,26 @@ operações. Por enquanto ele vai funcionar bem.
 
 non exhaustive
 #+begin_src sml
+
 fun operation (p : string list) =
+	let
+		val _ = map (fn x => print ("Operation: " ^ x ^ "\n")) p
+	in
 	case p of
 		(p1::[]) => (case functionReturn p1 of
 						 SOME Return => FunctionCommand Return
-					   | NONE => Operation (logicalIdentifier p1))
+					   | NONE => Operation (logicalIdentifier p1)
+					   | _ => raise invalidFunctionReturn )
 	  | (p1::p2::p3::[]) => (case pushOrPop p1 of
 								SOME Push => Memory (memOperations (Push, p2, p3))
 							  | SOME Pop => Memory (memOperations (Pop, p2, p3))
 							  | NONE => FunctionCommand (functionOperations p1 p2 p3))
 	  | (p1::p2::[]) => Labelop (readLabelFlow p1 p2)
 	  | _ => Empty
+	end
 
 val getOperationsFromTokens = operation
+val _ = print "read main function\n"
 #+end_src
 
 #+RESULTS:
@@ -351,6 +373,7 @@ val getOperationsFromTokens = operation
 
 ** ESPERANDO init 
 - call sys.init
+- colocar um código pra escrever o SP em 256
 #+begin_src sml
 
 #+end_src
@@ -358,9 +381,7 @@ val getOperationsFromTokens = operation
 #+RESULTS:
 : val it = "stdIn" : string
 
-** PRA FAZER write label operations fn : labelFlow * labelString -> string
-esses nomes dos tipos das labels ficaram bem confusos, depois acho que
-seria bom trocar.
+** write label operations fn : labelFlow * labelString -> string
 
 #+begin_src sml
 fun writeLabelops (label, LabelName str) =
@@ -643,6 +664,7 @@ fun writeFunctionOps fop =
 também está faltando implementar o contador de variáveis
 
 #+begin_src sml
+
 fun codeWriter line n =
 	case line of
 		Operation f => writeLogArith f n
@@ -654,7 +676,7 @@ fun codeWriter line n =
 val getOperation = operation o remCommGetTokens
 
 fun getLineWriteCode s n = codeWriter (getOperation s) n
-
+val _ = print "write main function\n"
 #+end_src
 
 #+RESULTS:
@@ -689,8 +711,9 @@ fun readfile (input, output) =
 (* val outstream = TextIO.openOut output *)
 fun readFileList (x::xs) n outstream =	
 	let
+		val _ = print (dir ^ "/" ^ x)
 		val part = readFileList xs n
-		val instream = TextIO.openIn x
+		val instream = TextIO.openIn (dir ^ "/" ^ x)
 		val readline = TextIO.inputLine instream
 		fun aux readline n function =
 			case readline of
@@ -714,10 +737,12 @@ adicionar a output com o path correto
 mexer na primeira função pra ficar melhor
 
 #+begin_src sml
-val filePath = hd (String.tokens (fn x => x = #".") (hd args))
+(* val filePath = hd (String.tokens (fn x => x = #".") (hd args)) *)
 (* val _ print hd parsedDirPathArgs *)
-val _ = readfile ((hd args), filePath ^ ".asm")
-(* val _ = OS.Process.exit(OS.Process.success) *)
+(* val _ = readfile ((hd args), filePath ^ ".asm") *)
+val _ = print "exit sucess"
+val _ = readFileList fileList 0 (TextIO.openOut (dir ^ "/" ^ dirName ^ ".asm"))
+val _ = OS.Process.exit(OS.Process.success)
 #+end_src
 
 #+RESULTS:
