@@ -208,7 +208,7 @@ fun getTokens s =
 	  | SOME s  => String.tokens (fn x => x = #" ") s
 
 val remCommGetTokens = getTokens o removeComments
-val _ = print "get words\n"
+val _ = print "Read words functions loaded\n"
 #+end_src
 
 #+RESULTS:
@@ -358,7 +358,7 @@ fun operation (p : string list) =
 	end
 
 val getOperationsFromTokens = operation
-val _ = print "read main function\n"
+val _ = print "Read main functions loaded\n"
 #+end_src
 
 #+RESULTS:
@@ -676,7 +676,7 @@ fun codeWriter line n =
 val getOperation = operation o remCommGetTokens
 
 fun getLineWriteCode s n = codeWriter (getOperation s) n
-val _ = print "write main function\n"
+val _ = print "Write main functions loaded\n"
 #+end_src
 
 #+RESULTS:
@@ -725,7 +725,7 @@ fun readFileList (x::xs) n outstream =
 		[] => (aux readline n TextIO.closeOut)
 	  | _ => (aux readline n part)
 	end
-
+val _ = print "File handling function loaded\n"
 #+end_src
 
 #+RESULTS:
@@ -740,8 +740,9 @@ mexer na primeira função pra ficar melhor
 (* val filePath = hd (String.tokens (fn x => x = #".") (hd args)) *)
 (* val _ print hd parsedDirPathArgs *)
 (* val _ = readfile ((hd args), filePath ^ ".asm") *)
-val _ = print "exit sucess"
+
 val _ = readFileList fileList 0 (TextIO.openOut (dir ^ "/" ^ dirName ^ ".asm"))
+val _ = print "Exit success"
 val _ = OS.Process.exit(OS.Process.success)
 #+end_src
 
