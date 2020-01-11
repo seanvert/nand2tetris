@@ -247,9 +247,6 @@ algo nessas linhas.
 
 #+begin_src sml
 fun segmentIdentifier s =
-	let
-		val _ = print s
-	in
 	case s of
 		"argument" => Argument (* RAM [2] POINTER *)
 	  | "local" => Local (* RAM [1] POINTER *)
@@ -260,7 +257,7 @@ fun segmentIdentifier s =
 	  | "pointer" => Pointer
 	  | "temp" => Temp (* RAM [5-12] CONTENTS *)
 	  | _ => raise segmentError
-	end
+
 
 fun pushOrPop str =
 	case str of
@@ -342,7 +339,9 @@ non exhaustive
 
 fun operation (p : string list) =
 	let
-		val _ = map (fn x => print ("Operation: " ^ x ^ "\n")) p
+		val _ = print "Operation: "
+		val _ = map (fn x => print (x ^ "\t")) p
+		val _ = print "\n"
 	in
 	case p of
 		(p1::[]) => (case functionReturn p1 of
@@ -403,6 +402,7 @@ fun writeLabelops (label, LabelName str) =
 ** write mem operations
 
 *** write push  fn : segment -> index -> string
+
 #+begin_src sml
 fun writePush seg (Index i)  =
 	let
@@ -707,11 +707,12 @@ fun readfile (input, output) =
 
 #+RESULTS:
 : val readfile = fn : string * string -> unit
+
 #+begin_src sml
 (* val outstream = TextIO.openOut output *)
 fun readFileList (x::xs) n outstream =	
 	let
-		val _ = print (dir ^ "/" ^ x)
+		val _ = print (dir ^ "/" ^ x ^ "\n")
 		val part = readFileList xs n
 		val instream = TextIO.openIn (dir ^ "/" ^ x)
 		val readline = TextIO.inputLine instream
@@ -719,7 +720,7 @@ fun readFileList (x::xs) n outstream =
 			case readline of
 				NONE => (TextIO.closeIn instream; function outstream)
 			  | SOME s => (TextIO.output(outstream, (getLineWriteCode s n));
-						 aux (TextIO.inputLine instream) (n + 1) (fn s => ()))
+						 aux (TextIO.inputLine instream) (n + 1) part)
 	in
 	case xs of
 		[] => (aux readline n TextIO.closeOut)
