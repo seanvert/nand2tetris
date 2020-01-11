@@ -489,8 +489,8 @@ fun readFileList (x::xs) n outstream =
 		fun aux readline n function =
 			case readline of
 				NONE => (TextIO.closeIn instream; function outstream)
-			  | SOME s => (TextIO.output(outstream, (getLineWriteCode s n));
-						 aux (TextIO.inputLine instream) (n + 1) part)
+			  | SOME s => (TextIO.output (outstream, (getLineWriteCode s n));
+						 aux (TextIO.inputLine instream) (n + 1) function)
 	in
 	case xs of
 		[] => (aux readline n TextIO.closeOut)

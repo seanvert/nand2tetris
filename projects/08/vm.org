@@ -308,7 +308,6 @@ fun readLabelFlow p1 p2 =
 not exhaustive
 
 #+begin_src sml
-
 fun getFunctionName function =
 	case String.fromString function of
 		NONE => raise invalidFunctionName
@@ -337,7 +336,6 @@ fun functionReturn str =
 	case str of
 		"return" => SOME Return
 	  | _ => NONE
-
 #+end_src
 
 #+RESULTS:
@@ -743,8 +741,8 @@ fun readFileList (x::xs) n outstream =
 		fun aux readline n function =
 			case readline of
 				NONE => (TextIO.closeIn instream; function outstream)
-			  | SOME s => (TextIO.output(outstream, (getLineWriteCode s n));
-						 aux (TextIO.inputLine instream) (n + 1) part)
+			  | SOME s => (TextIO.output (outstream, (getLineWriteCode s n));
+						 aux (TextIO.inputLine instream) (n + 1) function)
 	in
 	case xs of
 		[] => (aux readline n TextIO.closeOut)
