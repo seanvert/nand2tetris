@@ -241,8 +241,6 @@ fun operation (p : string list) =
 val getOperationsFromTokens = operation
 val _ = print "Read main functions loaded\n"
 
-val initSys = ""
-
 fun writeLabelops (label, LabelName str) =
 	case label of
 		Label => "(" ^ str ^ ")\n"
@@ -472,6 +470,15 @@ fun writeFunctionOps fop =
 	  \A=M\n\
 	  \0;JMP\n"
 	end
+
+val initSys = "@256\n\
+	\D=A\n\
+	\@SP\n\
+	\M=D\n" ^ writeFunctionOps (Call (Name "Sys.init", Localargs 0))
+
+val _ = print initSys
+
+(* falta eu colocar algum pedaço  *)
 
 fun writeLine line n =
 	case line of
