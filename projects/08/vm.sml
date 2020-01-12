@@ -8,6 +8,7 @@ exception functionOperationError
 exception invalidFunctionReturn
 exception invalidFunctionName
 exception invalidFunctionArgs
+exception invalidMemoryAddress
 
 datatype stackop = Push
 				 | Pop
@@ -88,7 +89,20 @@ fun openFiles p =
 					 end)
 	end
 
-val fileList = openFiles path
+(* arrumar a ordem dos arquivos *)
+fun orderedFileList p =
+	let
+		val ffileList = openFiles p
+		val sysExists = List.exists (fn x => x = "Sys.vm") ffileList
+		val filterSys = List.filter (fn x => x <> "Sys.vm") ffileList
+	in
+		case sysExists of
+			true => ["Sys.vm"] @ filterSys
+		  | false => ffileList
+	end
+
+
+val fileList = orderedFileList path
 val _ = print "File List: \n"
 val _ = map (fn x => print (x ^ "\n")) fileList
 val _ = print "----------------\n"
@@ -113,7 +127,6 @@ fun removeComments (s : string) =
 	  | "\n" => NONE
 	  | _ => SOME (hd (String.fields (fn x => x = #"/") str))
 	end
-(* if substring (s, 0, 2) = "//" then NONE else SOME s *)
 
 fun getTokens s =
 	case s of
@@ -155,9 +168,14 @@ fun pushOrPop str =
 	  | "pop" => SOME Pop
 	  | _ => NONE
 
+fun getMemIndex i =
+	case Int.fromString i of
+		NONE => raise invalidMemoryAddress
+	  | SOME n => n
+
 fun memOperations (q, w, e) =
 	let
-		val SOME i = Int.fromString e
+		val i = getMemIndex e
 		val s = segmentIdentifier w
 	in
 		case q of
@@ -479,7 +497,6 @@ fun readfile (input, output) =
 		aux readline 0
 	end
 
-(* val outstream = TextIO.openOut output *)
 fun readFileList (x::xs) n outstream =	
 	let
 		val _ = print (dir ^ "/" ^ x ^ "\n")
@@ -498,10 +515,6 @@ fun readFileList (x::xs) n outstream =
 	end
 val _ = print "File handling function loaded\n"
 
-(* val filePath = hd (String.tokens (fn x => x = #".") (hd args)) *)
-(* val _ print hd parsedDirPathArgs *)
-(* val _ = readfile ((hd args), filePath ^ ".asm") *)
-
 val _ = readFileList fileList 0 (TextIO.openOut (dir ^ "/" ^ dirName ^ ".asm"))
-val _ = print "Exit success"
+val _ = print "Exit success\n"
 val _ = OS.Process.exit(OS.Process.success)
