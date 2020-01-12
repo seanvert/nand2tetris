@@ -484,22 +484,9 @@ val getOperation = operation o remCommGetTokens
 fun getLineWriteCode s n = codeWriter (getOperation s) n
 val _ = print "Write main functions loaded\n"
 
-fun readfile (input, output) =
-	let
-		val instream = TextIO.openIn input
-		val outstream = TextIO.openOut output
-		val readline = TextIO.inputLine instream
-		fun aux readline n =
-			case readline of
-				NONE => (TextIO.closeIn instream; TextIO.closeOut outstream)
-			  | SOME s => (TextIO.output(outstream, (getLineWriteCode s n)); aux (TextIO.inputLine instream) (n + 1))
-	in
-		aux readline 0
-	end
-
 fun readFileList (x::xs) n outstream =	
 	let
-		val _ = print (dir ^ "/" ^ x ^ "\n")
+		val _ = print ("Arquivo: " ^ dir ^ "/" ^ x ^ "\n")
 		val part = readFileList xs n
 		val instream = TextIO.openIn (dir ^ "/" ^ x)
 		val readline = TextIO.inputLine instream
@@ -514,6 +501,7 @@ fun readFileList (x::xs) n outstream =
 	  | _ => (aux readline n part)
 	end
 val _ = print "File handling function loaded\n"
+val _ = print "----------------\n"
 
 val _ = readFileList fileList 0 (TextIO.openOut (dir ^ "/" ^ dirName ^ ".asm"))
 val _ = print "Exit success\n"

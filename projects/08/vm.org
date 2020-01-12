@@ -729,28 +729,9 @@ val _ = print "Write main functions loaded\n"
 - está carregando os arquivos corretamente, mas está bugando na saída.
 
 #+begin_src sml
-fun readfile (input, output) =
-	let
-		val instream = TextIO.openIn input
-		val outstream = TextIO.openOut output
-		val readline = TextIO.inputLine instream
-		fun aux readline n =
-			case readline of
-				NONE => (TextIO.closeIn instream; TextIO.closeOut outstream)
-			  | SOME s => (TextIO.output(outstream, (getLineWriteCode s n)); aux (TextIO.inputLine instream) (n + 1))
-	in
-		aux readline 0
-	end
-
-#+end_src
-
-#+RESULTS:
-: val readfile = fn : string * string -> unit
-
-#+begin_src sml
 fun readFileList (x::xs) n outstream =	
 	let
-		val _ = print (dir ^ "/" ^ x ^ "\n")
+		val _ = print ("Arquivo: " ^ dir ^ "/" ^ x ^ "\n")
 		val part = readFileList xs n
 		val instream = TextIO.openIn (dir ^ "/" ^ x)
 		val readline = TextIO.inputLine instream
@@ -765,6 +746,7 @@ fun readFileList (x::xs) n outstream =
 	  | _ => (aux readline n part)
 	end
 val _ = print "File handling function loaded\n"
+val _ = print "----------------\n"
 #+end_src
 
 #+RESULTS:
