@@ -241,6 +241,8 @@ fun operation (p : string list) =
 val getOperationsFromTokens = operation
 val _ = print "Read main functions loaded\n"
 
+val initSys = ""
+
 fun writeLabelops (label, LabelName str) =
 	case label of
 		Label => "(" ^ str ^ ")\n"
@@ -471,13 +473,20 @@ fun writeFunctionOps fop =
 	  \0;JMP\n"
 	end
 
-fun codeWriter line n =
+fun writeLine line n =
 	case line of
 		Operation f => writeLogArith f n
 	  | Memory s => writeStackMemOp s
 	  | Labelop lop => writeLabelops lop
 	  | FunctionCommand fop => writeFunctionOps fop
 	  | Empty => "\n"
+
+fun codeWriter line n =
+	case n of
+		0 => (case List.exists (fn x => x = "Sys.vm") fileList of
+				  true => initSys ^ (writeLine line n)
+				| false => writeLine line n)
+	  | _ => writeLine line n
 
 val getOperation = operation o remCommGetTokens
 

@@ -410,8 +410,8 @@ val _ = print "Read main functions loaded\n"
 D=A
 @SP
 M=D
-#+begin_src 
-
+#+begin_src sml
+val initSys = ""
 
 #+end_src
 
@@ -702,14 +702,20 @@ fun writeFunctionOps fop =
 também está faltando implementar o contador de variáveis
 
 #+begin_src sml
-
-fun codeWriter line n =
+fun writeLine line n =
 	case line of
 		Operation f => writeLogArith f n
 	  | Memory s => writeStackMemOp s
 	  | Labelop lop => writeLabelops lop
 	  | FunctionCommand fop => writeFunctionOps fop
 	  | Empty => "\n"
+
+fun codeWriter line n =
+	case n of
+		0 => (case List.exists (fn x => x = "Sys.vm") fileList of
+				  true => initSys ^ (writeLine line n)
+				| false => writeLine line n)
+	  | _ => writeLine line n
 
 val getOperation = operation o remCommGetTokens
 
