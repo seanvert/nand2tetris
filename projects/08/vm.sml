@@ -391,7 +391,7 @@ fun writeLogArith operation n =
 	  | Neg => auxU "-M"
 	end
 
-fun writeFunctionOps fop =
+fun writeFunctionOps fop n =
 	let
 		val putDRegisterInTheStack = "@SP\n\
 		\A=M\n\
@@ -405,14 +405,13 @@ fun writeFunctionOps fop =
 
 		fun pushFunctionStack seg =
 			"@" ^ seg ^ "\n\
-			\D=A\n" ^ putDRegisterInTheStack 
+			\D=M\n" ^ putDRegisterInTheStack
 										 
 		fun initializeArgs n = writeStackMemOp (Push, Constant, Index 0)
-							   (* (writeStackMemOp (Pop, Local, Index n)) *)
 
 		val concatenateList = foldr (fn (x, y) => x ^ y) ""
 		(* TODO 		    *)
-		val returnAddress = "placeholder"
+		val returnAddress = Int.toString n
 
 		fun restoreStack (seg, k) = "@FRAME\n\
 		\D=M\n\
@@ -433,8 +432,14 @@ fun writeFunctionOps fop =
 	case fop of
 		Declaration (Name fname, Localargs k) => "(" ^ fname ^ ")\n\
 		\" ^ concatenateList (List.tabulate (k, initializeArgs))
-	  | Call (Name fname, Localargs k) => concatenateList
-											 (map pushFunctionStack functionStack) ^ 
+	  | Call (Name fname, Localargs k) => "@"
+										 ^ fname
+										 ^ returnAddress ^ "\n\
+															\D=A\n"
+										 ^ putDRegisterInTheStack
+										 ^ concatenateList
+											   (map pushFunctionStack
+													(tl functionStack)) ^
 	  "@SP\n\
 	  \D=M\n\
 	  \@5\n\
@@ -449,7 +454,7 @@ fun writeFunctionOps fop =
 	  \M=D\n\
 	  \@" ^ fname ^ "\n\
 	  \0;JMP\n\
-	  \(" ^ returnAddress ^ ")\n"
+	  \(" ^ fname ^ returnAddress ^ ")\n"
 	  | Return => "@LCL\n\
 	  \D=M\n\
 	  \@FRAME\n\
@@ -474,10 +479,7 @@ fun writeFunctionOps fop =
 val initSys = "@256\n\
 	\D=A\n\
 	\@SP\n\
-	\M=D\n" ^ writeFunctionOps (Call (Name "Sys.init", Localargs 0))
-
-val _ = print initSys
-
+	\M=D\n" ^ writeFunctionOps (Call (Name "Sys.init", Localargs 0)) 0
 (* falta eu colocar algum pedaço  *)
 
 fun writeLine line n =
@@ -485,7 +487,7 @@ fun writeLine line n =
 		Operation f => writeLogArith f n
 	  | Memory s => writeStackMemOp s
 	  | Labelop lop => writeLabelops lop
-	  | FunctionCommand fop => writeFunctionOps fop
+	  | FunctionCommand fop => writeFunctionOps fop n
 	  | Empty => "\n"
 
 fun codeWriter line n =
@@ -500,25 +502,25 @@ val getOperation = operation o remCommGetTokens
 fun getLineWriteCode s n = codeWriter (getOperation s) n
 val _ = print "Write main functions loaded\n"
 
-fun readFileList (x::xs) n outstream =	
+fun readFileList (x::xs) n vc outstream =	
 	let
 		val _ = print ("Arquivo: " ^ dir ^ "/" ^ x ^ "\n")
-		val part = readFileList xs n
+		val part = readFileList xs n vc
 		val instream = TextIO.openIn (dir ^ "/" ^ x)
 		val readline = TextIO.inputLine instream
-		fun aux readline n function =
+		fun aux readline n vc function =
 			case readline of
 				NONE => (TextIO.closeIn instream; function outstream)
 			  | SOME s => (TextIO.output (outstream, (getLineWriteCode s n));
-						 aux (TextIO.inputLine instream) (n + 1) function)
+						 aux (TextIO.inputLine instream) (n + 1) vc function)
 	in
 	case xs of
-		[] => (aux readline n TextIO.closeOut)
-	  | _ => (aux readline n part)
+		[] => (aux readline n vc TextIO.closeOut)
+	  | _ => (aux readline n vc part)
 	end
 val _ = print "File handling function loaded\n"
 val _ = print "----------------\n"
 
-val _ = readFileList fileList 0 (TextIO.openOut (dir ^ "/" ^ dirName ^ ".asm"))
+val _ = readFileList fileList 0 0 (TextIO.openOut (dir ^ "/" ^ dirName ^ ".asm"))
 val _ = print "Exit success\n"
 val _ = OS.Process.exit(OS.Process.success)

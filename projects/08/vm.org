@@ -247,7 +247,6 @@ fun logicalIdentifier s =
 	  | "or" => Or
 	  | "not" => Not
 	  | _ => raise logicalError
-
 #+end_src
 
 #+RESULTS:
@@ -294,7 +293,6 @@ fun memOperations (q, w, e) =
 			Push => (Push, s, Index i)
 		  | Pop => (Pop, s, Index i)
 	end
-
 #+end_src
 
 #+RESULTS:
@@ -313,7 +311,6 @@ fun readLabelFlow p1 p2 =
 	  | "goto" => (Goto, LabelName p2)
 	  | "if-goto" => (Ifgoto, LabelName p2)
 	  | _ => raise labelError
-
 #+end_src
 
 #+RESULTS:
@@ -591,12 +588,12 @@ fun writeLogArith operation n =
 
 ** ESPERANDO write function operations fn : functionOp -> string
 depende das funções de memória  writeStackMemOp
+- tirar esse placeholder, TODO acho que é ele que está bugando as funções
 - consertar o nome das variáveis
-- tirar esse placeholder
 - diminuir um pouco o tamanho dessa função
 
 #+begin_src sml
-fun writeFunctionOps fop =
+fun writeFunctionOps fop n =
 	let
 		val putDRegisterInTheStack = "@SP\n\
 		\A=M\n\
@@ -610,14 +607,13 @@ fun writeFunctionOps fop =
 
 		fun pushFunctionStack seg =
 			"@" ^ seg ^ "\n\
-			\D=A\n" ^ putDRegisterInTheStack 
+			\D=M\n" ^ putDRegisterInTheStack
 										 
 		fun initializeArgs n = writeStackMemOp (Push, Constant, Index 0)
-							   (* (writeStackMemOp (Pop, Local, Index n)) *)
 
 		val concatenateList = foldr (fn (x, y) => x ^ y) ""
 		(* TODO 		    *)
-		val returnAddress = "placeholder"
+		val returnAddress = Int.toString n
 
 		fun restoreStack (seg, k) = "@FRAME\n\
 		\D=M\n\
@@ -638,8 +634,14 @@ fun writeFunctionOps fop =
 	case fop of
 		Declaration (Name fname, Localargs k) => "(" ^ fname ^ ")\n\
 		\" ^ concatenateList (List.tabulate (k, initializeArgs))
-	  | Call (Name fname, Localargs k) => concatenateList
-											 (map pushFunctionStack functionStack) ^ 
+	  | Call (Name fname, Localargs k) => "@"
+										 ^ fname
+										 ^ returnAddress ^ "\n\
+															\D=A\n"
+										 ^ putDRegisterInTheStack
+										 ^ concatenateList
+											   (map pushFunctionStack
+													(tl functionStack)) ^
 	  "@SP\n\
 	  \D=M\n\
 	  \@5\n\
@@ -654,7 +656,7 @@ fun writeFunctionOps fop =
 	  \M=D\n\
 	  \@" ^ fname ^ "\n\
 	  \0;JMP\n\
-	  \(" ^ returnAddress ^ ")\n"
+	  \(" ^ fname ^ returnAddress ^ ")\n"
 	  | Return => "@LCL\n\
 	  \D=M\n\
 	  \@FRAME\n\
@@ -681,16 +683,15 @@ fun writeFunctionOps fop =
 #+RESULTS:
 : val writeFunctionOps = fn : functionOp -> string
 
-** PRA FAZER init 
+** ESPERANDO bootstrap init 
 - acho que está certo agora. Não sei o que está faltando
+- a parte do 261 não sei se está correta. O livro fala de 256.
+
 #+begin_src sml
 val initSys = "@256\n\
 	\D=A\n\
 	\@SP\n\
-	\M=D\n" ^ writeFunctionOps (Call (Name "Sys.init", Localargs 0))
-
-val _ = print initSys
-
+	\M=D\n" ^ writeFunctionOps (Call (Name "Sys.init", Localargs 0)) 0
 (* falta eu colocar algum pedaço  *)
 #+end_src
 
@@ -706,7 +707,7 @@ fun writeLine line n =
 		Operation f => writeLogArith f n
 	  | Memory s => writeStackMemOp s
 	  | Labelop lop => writeLabelops lop
-	  | FunctionCommand fop => writeFunctionOps fop
+	  | FunctionCommand fop => writeFunctionOps fop n
 	  | Empty => "\n"
 
 fun codeWriter line n =
@@ -727,26 +728,30 @@ val _ = print "Write main functions loaded\n"
 : val getOperation = fn : string -> line
 : val getLineWriteCode = fn : string -> int -> string
 
-* PRA FAZER read stream, write stream
+* ESPERANDO read stream, write stream
 - falta mexer em algumas coisas, passar o número de variáveis criadas
   até então ao invés do número de linhas
+- n :: int  número de linhas
+- (x::xs) :: string list lista de arquivos
+- outstream :: FileIO arquivo de saída
+- vc :: int conteador de variáveis
 
 #+begin_src sml
-fun readFileList (x::xs) n outstream =	
+fun readFileList (x::xs) n vc outstream =	
 	let
 		val _ = print ("Arquivo: " ^ dir ^ "/" ^ x ^ "\n")
-		val part = readFileList xs n
+		val part = readFileList xs n vc
 		val instream = TextIO.openIn (dir ^ "/" ^ x)
 		val readline = TextIO.inputLine instream
-		fun aux readline n function =
+		fun aux readline n vc function =
 			case readline of
 				NONE => (TextIO.closeIn instream; function outstream)
 			  | SOME s => (TextIO.output (outstream, (getLineWriteCode s n));
-						 aux (TextIO.inputLine instream) (n + 1) function)
+						 aux (TextIO.inputLine instream) (n + 1) vc function)
 	in
 	case xs of
-		[] => (aux readline n TextIO.closeOut)
-	  | _ => (aux readline n part)
+		[] => (aux readline n vc TextIO.closeOut)
+	  | _ => (aux readline n vc part)
 	end
 val _ = print "File handling function loaded\n"
 val _ = print "----------------\n"
@@ -761,7 +766,7 @@ adicionar a output com o path correto
 mexer na primeira função pra ficar melhor
 
 #+begin_src sml
-val _ = readFileList fileList 0 (TextIO.openOut (dir ^ "/" ^ dirName ^ ".asm"))
+val _ = readFileList fileList 0 0 (TextIO.openOut (dir ^ "/" ^ dirName ^ ".asm"))
 val _ = print "Exit success\n"
 val _ = OS.Process.exit(OS.Process.success)
 #+end_src
