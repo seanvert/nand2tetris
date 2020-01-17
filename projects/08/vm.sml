@@ -207,10 +207,7 @@ fun functionOperations command function kargs =
 	in
 	case command of
 		"call" => Call (Name fname, Localargs args)
-	  | "function" => (case fname of
-						   (* TODO *)
-						  "Sys.init" =>  Declaration (Name fname, Localargs args)
-						| _ => Declaration (Name fname, Localargs args))
+	  | "function" => Declaration (Name fname, Localargs args)
 	  | _ => raise functionOperationError
 	end
 
@@ -252,7 +249,7 @@ fun writeLabelops (label, LabelName str) =
 	  \@" ^ str ^ "\n\
 	  \D;JNE\n"
 
-fun writePush seg (Index i)  =
+fun writePush seg (Index i) filename =
 	let
 		val putDRegisterInTheStack = "@SP\n\
 		\A=M\n\
@@ -271,7 +268,7 @@ fun writePush seg (Index i)  =
 		fun auxPointer seg = "@" ^ seg ^ "\n\
 		\D=M\n" ^ putDRegisterInTheStack
 
-		fun auxStaticTemp n x = "@" ^ Int.toString (n + x) ^ "\n\
+		fun auxStaticTemp n x = "@" ^ filename ^ Int.toString (n + x) ^ "\n\
 		\D=M\n" ^ putDRegisterInTheStack
 	in
 	case seg of
@@ -289,7 +286,7 @@ fun writePush seg (Index i)  =
 	  | Temp => auxStaticTemp i 5
 	end
 
-fun writePop seg (Index i) =
+fun writePop seg (Index i) filename =
 	let
 		val stackValueIntoDRegister = "@SP\n\
 		\AM=M-1\n\
@@ -312,7 +309,7 @@ fun writePop seg (Index i) =
 		\M=D\n"
 
 		fun auxStaticTemp n x = stackValueIntoDRegister ^
-		"@" ^ Int.toString (n + x) ^ "\n\
+		"@" ^ filename ^ Int.toString (n + x) ^ "\n\
 		\M=D\n"
 	in
 	case seg of
@@ -329,10 +326,10 @@ fun writePop seg (Index i) =
 	  | Temp => auxStaticTemp i 5
 	end
 
-fun writeStackMemOp s =
+fun writeStackMemOp s filename =
 	case s of
-		(Push, seg, ind) => writePush seg ind
-	  | (Pop, seg, ind) => writePop seg ind
+		(Push, seg, ind) => writePush seg ind filename
+	  | (Pop, seg, ind) => writePop seg ind filename
 
 (* n é o número de linhas no código										  *)
 fun writeLogArith operation n =
@@ -391,7 +388,7 @@ fun writeLogArith operation n =
 	  | Neg => auxU "-M"
 	end
 
-fun writeFunctionOps fop n =
+fun writeFunctionOps fop n filename =
 	let
 		val putDRegisterInTheStack = "@SP\n\
 		\A=M\n\
@@ -407,7 +404,7 @@ fun writeFunctionOps fop n =
 			"@" ^ seg ^ "\n\
 			\D=M\n" ^ putDRegisterInTheStack
 										 
-		fun initializeArgs n = writeStackMemOp (Push, Constant, Index 0)
+		fun initializeArgs n = writeStackMemOp (Push, Constant, Index 0) filename
 
 		val concatenateList = foldr (fn (x, y) => x ^ y) ""
 		(* TODO 		    *)
@@ -432,9 +429,8 @@ fun writeFunctionOps fop n =
 	case fop of
 		Declaration (Name fname, Localargs k) => "(" ^ fname ^ ")\n\
 		\" ^ concatenateList (List.tabulate (k, initializeArgs))
-	  | Call (Name fname, Localargs k) => "@"
-										 ^ fname
-										 ^ returnAddress ^ "\n\
+	  | Call (Name fname, Localargs k) => "@" 
+										 ^ fname ^ returnAddress ^ "\n\
 															\D=A\n"
 										 ^ putDRegisterInTheStack
 										 ^ concatenateList
@@ -467,7 +463,6 @@ fun writeFunctionOps fop n =
 	  \A=M\n\
 	  \M=D\n\
 	  \@ARG\n\
-	  \D=M\n\
 	  \D=M+1\n\
 	  \@SP\n\
 	  \M=D\n" ^ concatenateList (map restoreStack restorePairs)  ^
@@ -479,27 +474,27 @@ fun writeFunctionOps fop n =
 val initSys = "@256\n\
 	\D=A\n\
 	\@SP\n\
-	\M=D\n" ^ writeFunctionOps (Call (Name "Sys.init", Localargs 0)) 0
+	\M=D\n" ^ writeFunctionOps (Call (Name "Sys.init", Localargs 0)) 0 "Sys.init"
 (* falta eu colocar algum pedaço  *)
 
-fun writeLine line n =
+fun writeLine line n filename =
 	case line of
 		Operation f => writeLogArith f n
-	  | Memory s => writeStackMemOp s
+	  | Memory s => writeStackMemOp s filename
 	  | Labelop lop => writeLabelops lop
-	  | FunctionCommand fop => writeFunctionOps fop n
+	  | FunctionCommand fop => writeFunctionOps fop n filename
 	  | Empty => "\n"
 
-fun codeWriter line n =
+fun codeWriter line n filename =
 	case n of
 		0 => (case List.exists (fn x => x = "Sys.vm") fileList of
-				  true => initSys ^ (writeLine line n)
-				| false => writeLine line n)
-	  | _ => writeLine line n
+				  true => initSys ^ (writeLine line n filename)
+				| false => writeLine line n filename)
+	  | _ => writeLine line n filename
 
 val getOperation = operation o remCommGetTokens
 
-fun getLineWriteCode s n = codeWriter (getOperation s) n
+fun getLineWriteCode s n filename = codeWriter (getOperation s) n filename
 val _ = print "Write main functions loaded\n"
 
 fun readFileList (x::xs) n vc outstream =	
@@ -511,7 +506,7 @@ fun readFileList (x::xs) n vc outstream =
 		fun aux readline n vc function =
 			case readline of
 				NONE => (TextIO.closeIn instream; function outstream)
-			  | SOME s => (TextIO.output (outstream, (getLineWriteCode s n));
+			  | SOME s => (TextIO.output (outstream, (getLineWriteCode s n x));
 						 aux (TextIO.inputLine instream) (n + 1) vc function)
 	in
 	case xs of
